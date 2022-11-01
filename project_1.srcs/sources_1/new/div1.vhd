@@ -1,7 +1,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 entity my_div1 is
---generic(divisor1       :integer:=35000000);
+--generic(divisor1       :integer:=3500_0000);          --­ì®É¯ß100MHz => T =  1/100M = 0.00000001s =>T'  = 0.35s =>cnt_bound = T ' / T = 3500_0000 
 generic(divisor1       :integer:=300);
 port(rst,clk_in        : in std_logic;
      clk_out1 : out std_logic);
