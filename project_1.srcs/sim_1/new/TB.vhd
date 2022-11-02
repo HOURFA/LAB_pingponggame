@@ -12,7 +12,8 @@
                  clk : IN  std_logic;
                  led_bus : OUT  std_logic_vector(7 downto 0);
                  sa : OUT  std_logic_vector(6 downto 0);
-                 sb : OUT  std_logic_vector(6 downto 0)
+                 sb : OUT  std_logic_vector(6 downto 0);
+                 state : OUT std_logic_vector(4 downto 0)
                 );
             END COMPONENT; 
            --Inputs
@@ -25,6 +26,7 @@
            signal led_bus : std_logic_vector(7 downto 0);
            signal sa : std_logic_vector(6 downto 0);
            signal sb: std_logic_vector(6 downto 0);
+           signal state: std_logic_vector(4 downto 0);
            
            -- Clock period definitions
            constant clk_period : time := 10 ns;
@@ -41,7 +43,8 @@
                   clk => clk,
                   sa => sa,
                   sb => sb,
-                  led_bus => led_bus
+                  led_bus => led_bus,
+                  state => state
                 );
                 
            -- Clock process definitions

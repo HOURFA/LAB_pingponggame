@@ -18,9 +18,9 @@ component buttom is
 end component;
 component FSM is 
 	port(rst,clr_a,clr_b,clk1	: in std_logic;	
-	         led_loc                   : in std_logic_vector(3 downto 0 );	
-	         prestate                   : out std_logic;
-		 led_act  			: out std_logic_vector(2 downto 0);
+         led_loc                   : in std_logic_vector(3 downto 0 );	
+         prestate                   : out std_logic;
+		 led_act  			      : out std_logic_vector(2 downto 0);
 		 score_a,score_b      : out std_logic_vector(3 downto 0));			
 end component;
 component seven_seg is
@@ -60,10 +60,10 @@ F   : FSM 	    port map(rst     			=>rst,
 						 score_b   			=> score2,
 						 led_act            =>act,
 						 prestate           => ps);
-led_act  : led_action port map (rst           => rst,
+led_act  : led_action port map (rst         => rst,
                               clk           => divclk,
                               prestate	    => ps,
-                              act       =>act,
+                              act           =>act,
                               led           =>l1);				 
 s1  : seven_seg  port map(num_in    			=> score1,
 						 num_out   			=> sa);
