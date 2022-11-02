@@ -2,46 +2,51 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.all;
-entity FSM is   --計數單體
-	port(rst,clr_a,clr_b,clk1	: in std_logic;
-	         led_loc                     :in std_logic_vector(3 downto 0);		
-	         prestate                   : out std_logic;
-		 led_act  			: out std_logic_vector(2 downto 0);--led_act為led的顯示動作
-		 score_a,score_b      : out std_logic_vector(3 downto 0));--score為七段顯示器上的數字
-		 
+entity FSM is 
+    port(
+            rst                  :  in std_logic;
+            clk                  :  in std_logic;
+            click_left           :  in std_logic;
+            click_right          :  in std_logic;        
+            led_loc              :  in std_logic_vector(3 downto 0 );
+            prestate             : out std_logic;
+            led_act              : out std_logic_vector(2 downto 0);
+            score_left           : out std_logic_vector(3 downto 0);
+            score_right          : out std_logic_vector(3 downto 0)
+    ); 
 end FSM;
 architecture main of FSM is
 type FSM2 is(sa,sb,ha,hb,j);--定義FSM2=>sa,sb為發球，ha,hb為擊球判斷，j為得分判斷
 signal s,point_a,point_b,temp:std_logic_vector(3 downto 0);
---signal act : std_logic_vector(2 downto 0);
 signal ps :std_logic;
 signal hit:FSM2;
 begin
-process(rst,clk1,clr_a,clr_b,hit,led_loc)
+process(rst,clk,click_left,click_right,hit,led_loc)
 begin
 if rst = '1' then
 	hit 	<= sa;
-	ps 		<= '0';       
+	ps 		<= '0';
+	led_act <= "100";
 	point_a <= (others => '0');--右邊
 	point_b <= (others => '0');--左邊	
 else
-    if clk1 = '1' and clk1 'event then
+    if rising_edge(clk) then
             case hit is
                 when sa  => ps	<= '0';
-                            if clr_a = '1' then--a發球  
+                            if click_left = '1' then--a發球  
                                 ps	<= '1';
                                 led_act	<= "001";
                                 hit <= hb;                                                                	                           
-                            elsif clr_a = '0' then hit <= sa;
+                            elsif click_left = '0' then hit <= sa;
                             end if;
                 when sb  => ps	<= '1';    
-                            if clr_b = '1' then --b發球 
+                            if click_right = '1' then --b發球 
                                 ps	<= '0'; 
                                 led_act	<= "000";                                                       	                                                             	                               
                                 hit <= ha;                                                               
-                            elsif clr_b = '0' then hit <= sb;
+                            elsif click_right = '0' then hit <= sb;
                             end if;
-                when ha  => case clr_a is 
+                when ha  => case click_left is 
                                 when '1' => if led_loc = "0111" then--正確回擊
                                                 led_act  <= "011";
                                                 hit <= hb;
@@ -59,7 +64,7 @@ else
                                             end case;
                                 when others =>hit <= ha;
                             end case;
-                when hb  => case clr_b is 
+                when hb  => case click_right is 
                                 when '1' => if led_loc = "0000" then--正確回擊
                                                 led_act  <= "010";
                                                 hit <= ha;
@@ -87,6 +92,6 @@ else
     end if;
 end process;
 prestate    <= ps;
-score_a 	<= point_a;
-score_b 	<= point_b;
+score_left 	<= point_a;
+score_right <= point_b;
 end main;

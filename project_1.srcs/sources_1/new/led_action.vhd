@@ -3,9 +3,12 @@ use IEEE.STD_LOGIC_1164.ALL;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.all;
 entity led_action is
-    Port (rst,clk,prestate	:in std_logic;	
-                  act       : in std_logic_vector(2 downto 0);
-                  led             : out std_logic_vector(3 downto 0)
+    Port (
+            rst                   :  in std_logic;
+            clk                  :  in std_logic;
+            prestate           :  in std_logic;
+            act                  :  in std_logic_vector(2 downto 0);
+            led                  : out std_logic_vector(3 downto 0)
     );
 end led_action;
 
