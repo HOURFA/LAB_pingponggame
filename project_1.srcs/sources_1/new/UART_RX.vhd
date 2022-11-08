@@ -41,7 +41,7 @@ else
     if rising_edge(clk)then
         uart_rxd_ff0 <= uart_rxd;
         uart_rxd_ff1 <= uart_rxd_ff0;
-        uart_rxd_ff2 <= uart_rxd_ff1;
+        uart_rxd_ff2 <= uart_rxd_ff1;          
     end if;
 end if;
 neg_rxd <= uart_rxd_ff2;
@@ -69,8 +69,8 @@ if rst = '1' then
 else
     if rising_edge(bps_clk)then
         cnt <= cnt +1;
-        if 0< cnt and cnt < 9 then
-            rx_data_r(cnt-1) <= uart_rxd_ff2;    
+        if 0 < cnt and cnt < 9 then
+            rx_data_r(cnt-1) <= uart_rxd_ff2;
         end if;      
     end if;
     if cnt = 9 then        

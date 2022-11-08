@@ -146,6 +146,9 @@ begin
                 when 17 => str <= colon;
                 when 18 => str <= space;                    
                 when 19 => str <= ascii_score_right;
+                when 20 => str <= space; 
+                when 21 => str <= space;
+                when 22 => str <= space;
                 when others => NULL;
             end case;
         end if;

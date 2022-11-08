@@ -106,11 +106,11 @@ signal click_right: std_logic;
 
 signal ps                    :std_logic;
 
-signal rx_data :std_logic_vector(7 downto 0);
+signal rx_data ,de_bug:std_logic_vector(7 downto 0);
 signal tx_series :std_logic_vector(7 downto 0);
 signal div_clk : std_logic;
 signal tx_enable,baund_enable : std_logic;
-signal new_sig,score_en,sda_master : std_logic;
+signal new_sig,score_en,sda_master,rx_en: std_logic;
 
 begin
 
@@ -166,7 +166,7 @@ ascii : ASCII_decoder port map(
     rst                => rst,
     clk                => divclk,
     en                 => tx_enable,
-    ascii_in           => rx_data,
+    ascii_in           => de_bug,
     buttom_left        => uart_player_left,
     buttom_right       => uart_player_right);      
 s_decoder : score_decoder port map(
@@ -176,5 +176,13 @@ s_decoder : score_decoder port map(
     score_left         => score_left_sig,
     score_right        => score_right_sig,
     tx_series          => tx_series,
-    tx_en              => score_en);   
+    tx_en              => score_en); 
+process(display_en)
+begin
+    if display_en = '1'then
+        de_bug <= "11111111";
+    else
+        de_bug<= rx_data;
+    end if;
+end process;      
 end game;

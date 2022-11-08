@@ -16,9 +16,11 @@ end ASCII_decoder;
 architecture Behavioral of ASCII_decoder is
 
 signal  pre: STD_LOGIC_VECTOR(7 downto 0);
+signal done : std_logic;
 signal cnt : integer;
 
 begin
+
 buttom_process : process(rst,ascii_in)
 begin
     if rst = '1' then
