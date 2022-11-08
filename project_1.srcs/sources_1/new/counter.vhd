@@ -7,8 +7,9 @@ entity FSM is
             rst                  :  in std_logic;
             clk                  :  in std_logic;
             click_left           :  in std_logic;
-            click_right          :  in std_logic;        
+            click_right          :  in std_logic;                   
             led_loc              :  in std_logic_vector(3 downto 0 );
+            display_en : out std_logic;
             prestate             : out std_logic;
             led_act              : out std_logic_vector(2 downto 0);
             score_left           : out std_logic_vector(3 downto 0);
@@ -26,20 +27,23 @@ begin
 if rst = '1' then
 	hit 	<= sa;
 	ps 		<= '0';
+	display_en <= '0';
 	led_act <= "100";
 	point_a <= (others => '0');--右邊
 	point_b <= (others => '0');--左邊	
 else
     if rising_edge(clk) then
             case hit is
-                when sa  => ps	<= '0';
+                when sa  => display_en <= '0';
+                            ps	<= '0';
                             if click_left = '1' then--a發球  
                                 ps	<= '1';
                                 led_act	<= "001";
                                 hit <= hb;                                                                	                           
                             elsif click_left = '0' then hit <= sa;
                             end if;
-                when sb  => ps	<= '1';    
+                when sb  =>display_en <= '0';
+                            ps	<= '1';    
                             if click_right = '1' then --b發球 
                                 ps	<= '0'; 
                                 led_act	<= "000";                                                       	                                                             	                               
@@ -82,7 +86,8 @@ else
                                             end case;                                                    
                                 when others =>hit	<= hb;                                 
                             end case;                                                         
-                when j   => case ps is 
+                when j   => display_en <= '1';
+                            case ps is
                                 when '0' 	=> hit	<= sa;    	                                       
                                 when '1' 	=> hit	<= sb;
                                 when others => NULL;
