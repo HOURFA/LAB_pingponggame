@@ -6,6 +6,7 @@ package ascii_decoder_lib is
     constant exclamation :std_logic_vector(7 downto 0) := "00100001";   -- !
     constant colon :std_logic_vector(7 downto 0) := "00111010";   -- :
     constant baseline :std_logic_vector(7 downto 0) := "01011111";   -- _
+    constant LF :std_logic_vector(7 downto 0) := "00001010";   -- _
     constant a_0 :std_logic_vector(7 downto 0) := "00110000";
     constant a_1 :std_logic_vector(7 downto 0) := "00110001";
     constant a_2 :std_logic_vector(7 downto 0) := "00110010";

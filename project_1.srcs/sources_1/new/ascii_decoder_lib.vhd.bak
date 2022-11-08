@@ -1,10 +1,12 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 package ascii_decoder_lib is
+    constant ascii_bits : integer := 8;
     constant space :std_logic_vector(7 downto 0) := "00100000";
     constant exclamation :std_logic_vector(7 downto 0) := "00100001";   -- !
     constant colon :std_logic_vector(7 downto 0) := "00111010";   -- :
-    constant baseline :std_logic_vector(7 downto 0) := "01011111";   -- :
+    constant baseline :std_logic_vector(7 downto 0) := "01011111";   -- _
+    constant LF :std_logic_vector(7 downto 0) := "01011111";   -- _
     constant a_0 :std_logic_vector(7 downto 0) := "00110000";
     constant a_1 :std_logic_vector(7 downto 0) := "00110001";
     constant a_2 :std_logic_vector(7 downto 0) := "00110010";

@@ -27,14 +27,13 @@ begin
 if rst = '1' then
 	hit 	<= sa;
 	ps 		<= '0';
-	display_en <= '0';
 	led_act <= "100";
 	point_a <= (others => '0');--右邊
 	point_b <= (others => '0');--左邊	
 else
     if rising_edge(clk) then
             case hit is
-                when sa  => display_en <= '0';
+                when sa  => 
                             ps	<= '0';
                             if click_left = '1' then--a發球  
                                 ps	<= '1';
@@ -42,7 +41,7 @@ else
                                 hit <= hb;                                                                	                           
                             elsif click_left = '0' then hit <= sa;
                             end if;
-                when sb  =>display_en <= '0';
+                when sb  =>
                             ps	<= '1';    
                             if click_right = '1' then --b發球 
                                 ps	<= '0'; 
@@ -86,7 +85,7 @@ else
                                             end case;                                                    
                                 when others =>hit	<= hb;                                 
                             end case;                                                         
-                when j   => display_en <= '1';
+                when j   => 
                             case ps is
                                 when '0' 	=> hit	<= sa;    	                                       
                                 when '1' 	=> hit	<= sb;
@@ -95,8 +94,24 @@ else
             end case;
         end if;
     end if;
-end process;
 prestate    <= ps;
 score_left 	<= point_a;
-score_right <= point_b;
+score_right <= point_b;    
+end process;
+
+display_process : process(rst,clk)
+begin
+    if rst = '1' then
+     display_en <= '0';
+    else
+        if rising_edge(clk)then
+            if hit = j then
+                display_en <= '1';
+            else
+                display_en <= '0';
+            end if;
+        end if;
+    end if;
+end process;
+
 end main;

@@ -23,7 +23,7 @@ end component;
 
 signal tx_en_ff0,tx_en_ff1,tx_en_ff2,tx_en_ff:std_logic;
 signal cnt,tx_cnt : integer range 0 to 10;
-signal baund_enable ,bps_clk,rx_en_reg,tx_ena :std_logic;
+signal baund_enable ,bps_clk :std_logic;
 signal tx_data_all : std_logic_vector(9 downto 0);
 begin
 
@@ -54,12 +54,11 @@ if rst = '1'then
     baund_enable <= '0' ; 
     tx_data_all <= (others => '0');
 else
---    if (tx_en_ff2) = '1' then
     if  rising_edge(tx_en_ff2) then
         baund_enable <= '1' ;
         tx_data_all <= '1' & tx_data & '0';
     end if;
-    if tx_cnt = 5 then
+    if cnt = 10 then
         baund_enable <= '0';
     end if;      
 end if;
@@ -69,7 +68,6 @@ process(rst,bps_clk,cnt,tx_data_all,baund_enable)
 begin
 if rst = '1' then
     uart_txd <= '1';
-    tx_cnt <= 0;
     cnt <= 0;
 else
     if rising_edge(bps_clk)then
@@ -77,12 +75,8 @@ else
         uart_txd <= tx_data_all(cnt-1);
     end if;
     if cnt = 10 then
-        tx_cnt <= tx_cnt + 1;
         cnt <= 0;
     end if;        
-    if tx_cnt = 5 then
-        tx_cnt <= 0;
-    end if;
 end if;
 end process;
 end Behavioral;

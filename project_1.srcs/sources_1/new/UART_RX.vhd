@@ -44,7 +44,6 @@ else
         uart_rxd_ff2 <= uart_rxd_ff1;
     end if;
 end if;
---neg_rxd <= uart_rxd_ff2 and uart_rxd_ff1 and (not uart_rxd_ff0) and (not uart_rxd);
 neg_rxd <= uart_rxd_ff2;
 end process;
 
