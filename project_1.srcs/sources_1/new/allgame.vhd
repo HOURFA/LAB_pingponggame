@@ -16,8 +16,9 @@ end allgame;
 architecture game of allgame is
 
 component div is port(
-    rst                  :  in std_logic;
-    clk_in               :  in std_logic;
+    rst                      :  in std_logic;
+    UB                    :  in integer;
+    clk_in                :  in std_logic;
     clk_out              : out std_logic);
 end component;
 
@@ -70,17 +71,16 @@ component UART_TX is Port (
     tx_data     :in std_logic_vector(7 downto 0));
 end component;
 
-component ASCII_decoder is Port (
+component input_controller is Port (
     rst : in STD_LOGIC;
     clk : in STD_LOGIC; 
-    en  : in STD_LOGIC;
     ascii_in : in STD_LOGIC_VECTOR(7 downto 0);
     enter       :out STD_LOGIC;
     buttom_left : out STD_LOGIC;
     buttom_right : out STD_LOGIC);
 end component;
 
-component score_decoder is Port (
+component output_controller is Port (
     rst : in STD_LOGIC;
     clk : in STD_LOGIC;
     display_en : in STD_LOGIC;
@@ -88,7 +88,9 @@ component score_decoder is Port (
     score_left : in STD_LOGIC_VECTOR (3 downto 0);
     score_right : in STD_LOGIC_VECTOR (3 downto 0);
     tx_series : out STD_LOGIC_VECTOR (7 downto 0);
-    tx_en : out std_logic);
+    tx_en : out std_logic;
+    rst_system : out std_logic;
+    DIV_CLK_CONSTANT : out integer);
 end component;
 
 signal score_left_sig            :std_logic_vector(3 downto 0);
@@ -112,28 +114,31 @@ signal rx_data ,de_bug,setting_in:std_logic_vector(7 downto 0);
 signal tx_series :std_logic_vector(7 downto 0);
 signal div_clk : std_logic;
 signal tx_enable,baund_enable : std_logic;
-signal new_sig,score_en,sda_master,rx_en,enter,s_en: std_logic;
+signal rst_system,rst_all,score_en,sda_master,rx_en,enter,s_en: std_logic;
+signal DIV_CLK_CONSTANT : integer;
 
 begin
 
 click_left <= buttom_player_left or uart_player_left;
 click_right <= buttom_player_right or uart_player_right;
+rst_all <= rst or rst_system;
 div1    : div      port map(
-    rst                => rst,
+    rst                => rst_all,
+    UB                 => DIV_CLK_CONSTANT,
     clk_in             => clk,
     clk_out            => divclk);
 left    : buttom    port map(
-    rst                => rst,
+    rst                => rst_all,
     clk                => clk,
     click              => click_left,
     buttom             => de_buttom_left_sig);
 right   : buttom    port map(
-    rst                => rst,
+    rst                => rst_all,
     clk                => clk,
     click              => click_right,
     buttom             => de_buttom_right_sig);
 SYSTEM  : FSM       port map(
-    rst                => rst,
+    rst                => rst_all,
     clk                => divclk,
     led_loc            => led_reg,
     click_left         => de_buttom_left_sig,
@@ -144,7 +149,7 @@ SYSTEM  : FSM       port map(
     led_act            => act,
     prestate           => ps);
 led_act : led_action port map (
-    rst                => rst,
+    rst                => rst_all,
     clk                => divclk,
     prestate           => ps,
     act                => act,
@@ -154,36 +159,37 @@ l       : led8      port map(
     led                => led_bus);                              
 rx_uart : UART_RX port map(
     clk                => clk,
-    rst                => rst,
+    rst                => rst_all,
     uart_rxd           => rx,
     rx_data            => rx_data,
     tx_enable          => tx_enable);    
 tx_uart : UART_TX port map(
     clk                => clk,
-    rst                => rst,
+    rst                => rst_all,
     tx_en              => score_en,
     uart_txd           => tx,
     tx_data            => tx_series);
-ascii : ASCII_decoder port map(
-    rst                => rst,
+input : input_controller port map(
+    rst                => rst_all,
     clk                => divclk,
-    en                 => tx_enable,
     ascii_in           => rx_data,
     enter              => enter,
     buttom_left        => uart_player_left,
     buttom_right       => uart_player_right);   
     
-    s_en <=    display_en or enter;
+s_en <=    display_en or enter;
     
-s_decoder : score_decoder port map(
-    rst                => rst,
+output : output_controller port map(
+    rst                => rst_all,
     clk                => clk,
     setting_in         => rx_data,
     display_en         => s_en,
     score_left         => score_left_sig,
     score_right        => score_right_sig,
     tx_series          => tx_series,
-    tx_en              => score_en); 
+    tx_en              => score_en,
+    rst_system         => rst_system,
+    DIV_CLK_CONSTANT   => DIV_CLK_CONSTANT); 
 process(display_en)
 begin
     if display_en = '1'then

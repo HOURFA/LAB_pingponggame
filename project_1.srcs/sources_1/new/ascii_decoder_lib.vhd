@@ -13,6 +13,7 @@ package ascii_decoder_lib is
     constant BS :std_logic_vector(7 downto 0) := "00001000";
     constant LEFT_p :std_logic_vector(7 downto 0) := "00101000";
     constant right_p :std_logic_vector(7 downto 0) := "00101001";
+    constant ESC :std_logic_vector(7 downto 0) := "00011011";
     constant a_0 :std_logic_vector(7 downto 0) := "00110000";
     constant a_1 :std_logic_vector(7 downto 0) := "00110001";
     constant a_2 :std_logic_vector(7 downto 0) := "00110010";

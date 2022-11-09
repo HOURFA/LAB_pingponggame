@@ -2,19 +2,18 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use work.constant_def.all;
 use work.ascii_decoder_lib.all;
-entity ASCII_decoder is
+entity input_controller is
     Port (
             rst : in STD_LOGIC;
             clk : in STD_LOGIC;
-            en   : in STD_LOGIC;
             ascii_in : in STD_LOGIC_VECTOR(7 downto 0);
             enter : out STD_LOGIC;
             buttom_left : out STD_LOGIC;
             buttom_right : out STD_LOGIC
     );
-end ASCII_decoder;
+end input_controller;
 
-architecture Behavioral of ASCII_decoder is
+architecture Behavioral of input_controller is
 
 signal  pre: STD_LOGIC_VECTOR(7 downto 0);
 signal done : std_logic;

@@ -4,6 +4,7 @@ use work.constant_def.all;
 entity div is
     port(
             rst                     :  in std_logic;
+            UB                   :  in integer;
             clk_in               :  in std_logic;
             clk_out              : out std_logic
     );
@@ -11,7 +12,7 @@ end div;
 architecture arch1 of div is
 
 signal cnt2        :std_logic;
-signal cnt1      : integer range 0 to DIV_CLK_CONSTANT :=1;
+signal cnt1      : integer ;
 begin
 process(rst,clk_in,cnt2)    --divider1
     
@@ -21,12 +22,12 @@ process(rst,clk_in,cnt2)    --divider1
         cnt1 <= 0;
     else 
         if rising_edge(clk_in) then
-            if cnt1 < DIV_CLK_CONSTANT then
+            if cnt1 < UB then
                 cnt1  <= cnt1 + 1;
             else
                 cnt1 <= 0; 
             end if;
-            if((cnt1 = DIV_CLK_CONSTANT / 2) or (cnt1 = DIV_CLK_CONSTANT)) then 
+            if((cnt1 = UB / 2) or (cnt1 = UB)) then 
                 cnt2 <= not cnt2;
             end if;
         end if;
