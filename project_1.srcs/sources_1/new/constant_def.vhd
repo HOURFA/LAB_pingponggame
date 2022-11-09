@@ -11,6 +11,10 @@ package constant_def is
     constant clk_period : integer := 10;
     constant bps            :integer  :=115200; 
     constant pbclk         :integer := ((10**9)/(bps*clk_period));
-    constant total_str_num : integer := 23;
+    constant score_num : integer := 56;
+    constant win_num : integer := 14;
+    constant SETTING_IDLE_NUM : integer := 45; -- SETTING_MODE : (1) SPEED (2) SCORE (9) QUIT
+    constant SETTING_SPEED_NUM : integer := 47; --(1) HIGHT_SPEED (2) MIDDLE_SPEED (3) SLOW SPEED
+    constant SETTING_SCORE_NUM : integer := 31; --Please enter maximum score : 
     --
 end package;

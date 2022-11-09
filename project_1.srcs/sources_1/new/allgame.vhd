@@ -75,6 +75,7 @@ component ASCII_decoder is Port (
     clk : in STD_LOGIC; 
     en  : in STD_LOGIC;
     ascii_in : in STD_LOGIC_VECTOR(7 downto 0);
+    enter       :out STD_LOGIC;
     buttom_left : out STD_LOGIC;
     buttom_right : out STD_LOGIC);
 end component;
@@ -83,6 +84,7 @@ component score_decoder is Port (
     rst : in STD_LOGIC;
     clk : in STD_LOGIC;
     display_en : in STD_LOGIC;
+    setting_in : in STD_LOGIC_VECTOR(7 downto 0);    
     score_left : in STD_LOGIC_VECTOR (3 downto 0);
     score_right : in STD_LOGIC_VECTOR (3 downto 0);
     tx_series : out STD_LOGIC_VECTOR (7 downto 0);
@@ -106,11 +108,11 @@ signal click_right: std_logic;
 
 signal ps                    :std_logic;
 
-signal rx_data ,de_bug:std_logic_vector(7 downto 0);
+signal rx_data ,de_bug,setting_in:std_logic_vector(7 downto 0);
 signal tx_series :std_logic_vector(7 downto 0);
 signal div_clk : std_logic;
 signal tx_enable,baund_enable : std_logic;
-signal new_sig,score_en,sda_master,rx_en: std_logic;
+signal new_sig,score_en,sda_master,rx_en,enter,s_en: std_logic;
 
 begin
 
@@ -166,13 +168,18 @@ ascii : ASCII_decoder port map(
     rst                => rst,
     clk                => divclk,
     en                 => tx_enable,
-    ascii_in           => de_bug,
+    ascii_in           => rx_data,
+    enter              => enter,
     buttom_left        => uart_player_left,
-    buttom_right       => uart_player_right);      
+    buttom_right       => uart_player_right);   
+    
+    s_en <=    display_en or enter;
+    
 s_decoder : score_decoder port map(
     rst                => rst,
     clk                => clk,
-    display_en         => display_en,
+    setting_in         => rx_data,
+    display_en         => s_en,
     score_left         => score_left_sig,
     score_right        => score_right_sig,
     tx_series          => tx_series,

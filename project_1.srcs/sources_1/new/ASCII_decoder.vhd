@@ -8,6 +8,7 @@ entity ASCII_decoder is
             clk : in STD_LOGIC;
             en   : in STD_LOGIC;
             ascii_in : in STD_LOGIC_VECTOR(7 downto 0);
+            enter : out STD_LOGIC;
             buttom_left : out STD_LOGIC;
             buttom_right : out STD_LOGIC
     );
@@ -26,6 +27,7 @@ begin
     if rst = '1' then
         buttom_left <= '0';
         buttom_right <= '0';
+        enter <= '0';
         pre <= (others => '0');
     else        
         if rising_edge(clk)then
@@ -41,9 +43,15 @@ begin
                 else
                     buttom_right <= '0';
                 end if;
+                if ascii_in = CR then
+                    enter <= '1';
+                else
+                    enter <= '0';
+                end if;
             else
                 buttom_left <= '0';
                 buttom_right <= '0';
+                enter <= '0';
             end if;
        end if;
     end if;
