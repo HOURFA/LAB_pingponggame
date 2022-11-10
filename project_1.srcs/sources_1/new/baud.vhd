@@ -1,3 +1,23 @@
+----------------------------------------------------------------------------------
+-- Company:  NKUST
+-- Engineer:  RFA
+-- 
+-- Create Date: 2022/11/09 20:07:47
+-- Design Name: 
+-- Module Name: random_genetor - Behavioral
+-- Project Name: 
+-- Target Devices: 
+-- Tool Versions: 
+-- Description: 
+-- 
+-- Dependencies: 
+-- 
+-- Revision:
+-- Revision 0.01 - File Created
+-- Additional Comments:
+-- 
+----------------------------------------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use work.constant_def.all;

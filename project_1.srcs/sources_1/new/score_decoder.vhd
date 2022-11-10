@@ -1,10 +1,31 @@
+----------------------------------------------------------------------------------
+-- Company:  NKUST
+-- Engineer:  RFA
+-- 
+-- Create Date: 2022/11/09 20:07:47
+-- Design Name: 
+-- Module Name: random_genetor - Behavioral
+-- Project Name: 
+-- Target Devices: 
+-- Tool Versions: 
+-- Description: 
+-- 
+-- Dependencies: 
+-- 
+-- Revision:
+-- Revision 0.01 - File Created
+-- Additional Comments:
+-- 
+----------------------------------------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.all;
 use work.constant_def.all;
 use work.ascii_decoder_lib.all;
-entity score_decoder is Port (
+
+entity output_controller is Port (
     rst : in STD_LOGIC;
     clk : in STD_LOGIC;
     display_en : in STD_LOGIC;
@@ -12,10 +33,15 @@ entity score_decoder is Port (
     score_left : in STD_LOGIC_VECTOR (3 downto 0);
     score_right : in STD_LOGIC_VECTOR (3 downto 0);
     tx_series : out STD_LOGIC_VECTOR (7 downto 0);
-    tx_en : out std_logic);
-end score_decoder;
+    tx_en : out std_logic;
+    rst_system : out std_logic;
+    random_en   : out std_logic;
+    game_start :  out std_logic;  
+    DIV_CLK_CONSTANT : out integer);
+end output_controller;
 
-architecture Behavioral of score_decoder is
+architecture Behavioral of output_controller is
+
 component baud is Port (
     clk              :in std_logic;
     rst          :in std_logic;
@@ -24,79 +50,77 @@ component baud is Port (
 end component;
 
 type FSM is (IDLE,READ,WAIT_EN);
-type OUTPUT_FSM is (SCORE , WIN , SETTING);
-TYPE SETTING_FSM is (IDLE , SPEED_SETTING , SCORE_SETTING );
+type OUTPUT_FSM is (SCORE , WIN , SETTING , RESET_SYSTEM);
+TYPE SETTING_FSM is (IDLE , SPEED_SETTING , SCORE_SETTING ,MODE_SETTING);
 signal SYSTEM_FSM : FSM;
 signal OUTPUT_MODE : OUTPUT_FSM;
 signal SETTING_MODE : SETTING_FSM;
+------------------------------------------------------------------------------------RX_hit
 signal ascii_score_left : std_logic_vector(7 downto 0);
 signal ascii_score_right: std_logic_vector(7 downto 0);
+------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------Out_str_series
 signal str                    : std_logic_vector(7 downto 0);
+------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------Bps_generator
 signal bps_clk,bps_en: std_logic;
-signal done , win_left , win_right : std_logic;
-signal cnt,str_num ,UB , MAX_SCORE: integer;
-signal setting_done : std_logic;
+------------------------------------------------------------------------------------
+
+signal done , win_left , win_right,setting_done ,speed_setting_done,score_setting_done,mode_setting_done,display: std_logic;
+signal cnt,str_num  ,UB , MAX_SCORE: integer;
 begin
+
 tx_baud :baud port map(
     clk => clk,
     rst => rst,
     enable => bps_en,
     bps_clk => bps_clk);
     
-tx_series <= str;
+tx_series <= str;       --output
 
-FSM_process : process(rst,clk,str_num)
+FSM_process : process(rst,clk,str_num)        --輸出的FSM
 begin
     if rst = '1' then
-        SYSTEM_FSM <= READ;
-        UB <= 0;
+        SYSTEM_FSM <= IDLE;
     else
         if rising_edge(clk) then
             case SYSTEM_FSM is  
                 when IDLE    =>             --等待en = '1' 啟動FSM
-                    if display_en = '1' then
+                    if display_en = '1' or display = '1'then
                         SYSTEM_FSM <= READ;
                     else
                         SYSTEM_FSM <= IDLE;
                     end if;
                 when READ    =>             --輸出所有要輸出的str後轉態
-                    case OUTPUT_MODE is
-                        when SCORE => UB <= score_num;
-                            if str_num = UB then
-                                SYSTEM_FSM <= WAIT_EN;
-                            else
-                                SYSTEM_FSM <= READ;
-                            end if;
-                        when WIN => UB <= win_num;
-                            if str_num = UB then
-                                SYSTEM_FSM <= WAIT_EN;
-                            else
-                                SYSTEM_FSM <= READ;
-                            end if;                        
-                        when SETTING =>
-                            case SETTING_MODE is
-                                when IDLE          => UB <= SETTING_IDLE_NUM  ;   -- SETTING_MODE : (1) SPEED  (2) SCORE  (9) QUIT
-                                when SPEED_SETTING => UB <= SETTING_SPEED_NUM ;   --(1) HIGHT_SPEED (2) MIDDLE_SPEED (3) SLOW SPEED
-                                when SCORE_SETTING => UB <= SETTING_SCORE_NUM ;   --Please enter maximum score : 
-                                when others => NULL;
-                             end case;
-                            if str_num = UB then
-                                SYSTEM_FSM <= WAIT_EN;
-                            else
-                                SYSTEM_FSM <= READ;
-                            end if;         
-                        when others => NULL;
-                    end case;
-                when WAIT_EN =>             --因display_en = '1' 時間還未結束，等到結束後在判斷下次的en
-                    if display_en = '1' then
+                    if str_num = UB then
                         SYSTEM_FSM <= WAIT_EN;
-                    elsif display_en = '0' then
+                    else
+                        SYSTEM_FSM <= READ;
+                    end if;    
+                when WAIT_EN =>             --因display_en = '1' 時間還未結束，等到結束後在判斷下次的en
+                    if display_en = '1' or display = '1'then
+                        SYSTEM_FSM <= WAIT_EN;
+                    elsif display_en = '0'or display = '0' then
                         SYSTEM_FSM <= IDLE;
                     end if;                    
                 when others  => NULL;              
             end case;
         end if;    
     end if;   
+end process;
+
+FSM_ACT_process : process(rst,clk)
+begin
+    if rst = '1' then
+        bps_en <= '0';
+        done <= '0';
+    else
+        if SYSTEM_FSM = idle  then
+            bps_en <= '0';
+        else
+            bps_en <= '1';
+        end if; 
+    end if;
 end process;
 
 OUTPUT_FSM_process : process(rst, clk)
@@ -112,16 +136,45 @@ begin
                     else
                         OUTPUT_MODE <= SCORE;
                     end if;
-                when WIN => NULL;                        
+                when WIN =>
+                    if str_num = UB then 
+                        OUTPUT_MODE <= RESET_SYSTEM;
+                    else
+                        OUTPUT_MODE <= WIN;
+                    end if;
                 when SETTING =>
                     if setting_done = '1' then
                         OUTPUT_MODE <= SCORE;
                     else
                         OUTPUT_MODE <= SETTING;
                     end if;
+                when RESET_SYSTEM => OUTPUT_MODE <= SETTING;                
                 when others => NULL;
             end case;
         end if;
+    end if;
+end process;
+
+OUTPUT_FSM_ACT_process : process(rst,clk)
+begin
+    if rst = '1' then
+        rst_system <= '0';
+        UB <= 0;
+    else
+        case OUTPUT_MODE is
+            when SCORE => UB <= score_num;       
+            when WIN => UB <= win_num;                
+            when SETTING =>
+                case SETTING_MODE is
+                    when IDLE          => UB <= SETTING_IDLE_NUM  ;   -- SETTING_MODE : (1) SPEED  (2) SCORE  (9) QUIT
+                    when SPEED_SETTING => UB <= SETTING_SPEED_NUM ;   --(1) HIGHT_SPEED (2) MIDDLE_SPEED (3) SLOW SPEED
+                    when SCORE_SETTING => UB <= SETTING_SCORE_NUM ;   --Please enter maximum score :
+                    when MODE_SETTING => UB <= SETTING_MODE_NUM ;   --(1) NORMAL_MODE (2) VARIABLE_SPEED_MODE
+                    when others => NULL;
+                 end case;
+            when RESET_SYSTEM => rst_system <= '1';
+            when others => NULL;           
+        end case;
     end if;
 end process;
 
@@ -129,7 +182,6 @@ SETTING_FSM_process : process(rst,clk)
 begin
     if rst = '1' then
         SETTING_MODE <= IDLE;
-        setting_done <= '0';
     else
         if rising_edge(clk) then
             case SETTING_MODE is
@@ -137,50 +189,112 @@ begin
                     case setting_in is
                         when a_1 => SETTING_MODE <= SPEED_SETTING;
                         when a_2 => SETTING_MODE <= SCORE_SETTING;
-                        when a_9 => SETTING_MODE <= IDLE; setting_done <= '1';
+                        when a_3 => SETTING_MODE <= MODE_SETTING;
+                        when ESC => SETTING_MODE <= IDLE;
                         when others =>  SETTING_MODE <= IDLE;
                     end case; 
                 when SPEED_SETTING =>
-                    case setting_in is
-                        when a_1 => SETTING_MODE <= IDLE;
-                        when a_2 => SETTING_MODE <= IDLE;
-                        when a_3 => SETTING_MODE <= IDLE;                    
-                        when a_9 => SETTING_MODE <= IDLE;
-                        when others => SETTING_MODE <= SPEED_SETTING;
-                    end case;
+                    if speed_setting_done = '1' then
+                        SETTING_MODE <= IDLE;
+                    else
+                        SETTING_MODE <= SPEED_SETTING;
+                    end if;
                 when SCORE_SETTING =>
-                    case setting_in is
-                        when a_1 => SETTING_MODE <= IDLE;
-                        when a_2 => SETTING_MODE <= IDLE;
-                        when a_3 => SETTING_MODE <= IDLE;   
-                        when a_4 => SETTING_MODE <= IDLE;
-                        when a_5 => SETTING_MODE <= IDLE;
-                        when a_6 => SETTING_MODE <= IDLE;   
-                        when a_7 => SETTING_MODE <= IDLE;
-                        when a_8 => SETTING_MODE <= IDLE;                                                                                         
-                        when a_9 => SETTING_MODE <= IDLE;
-                        when others => SETTING_MODE <= SCORE_SETTING;
-                    end case;                
+                    if score_setting_done = '1' then
+                        SETTING_MODE <= IDLE;
+                    else
+                        SETTING_MODE <= SCORE_SETTING;
+                    end if;             
+                when MODE_SETTING =>
+                    if mode_setting_done = '1' then
+                        SETTING_MODE <= IDLE;
+                    else
+                        SETTING_MODE <= MODE_SETTING;
+                    end if;
                 when others => NULL;
             end case;
         end if;
     end if;
 end process;
-ACT_process : process(rst,clk)
+SETTING_FSM_ACT_process : process(rst,clk)
 begin
     if rst = '1' then
-        bps_en <= '0';
-        done <= '0';
+        setting_done <= '0';  
+        speed_setting_done <= '0';  
+        score_setting_done <= '0';
+        mode_setting_done <= '0';
+        game_start <= '0';
+        random_en <= '0';
+        display <= '0';
+        DIV_CLK_CONSTANT <= 35000000;
+        MAX_SCORE <= 9 ;
     else
-        if SYSTEM_FSM = idle  then
-            bps_en <= '0';
-        else
-            bps_en <= '1';
-        end if; 
+        if rising_edge(clk) then        
+            case SETTING_MODE is
+                when IDLE =>
+                    if setting_in = ESC then        --設置結束
+                        setting_done <= '1';
+                        display <= '0';
+                        game_start <= '1';
+                    else
+                        setting_done <= '0';                   
+                    end if;
+                when SPEED_SETTING =>
+                    display <= '1';
+                    if setting_in = CR then        --設置結束
+                        speed_setting_done <= '1';
+                        display <= '0';                        
+                    else
+                        speed_setting_done <= '0';     
+                        display <= '1';                                      
+                    end if;
+                    case setting_in is            --設定速度
+                        when a_1 => DIV_CLK_CONSTANT <= HIGH_SPEED; display <= '1';
+                        when a_2 => DIV_CLK_CONSTANT <= MIDDLE_SPEED; display <= '1';
+                        when a_3 => DIV_CLK_CONSTANT <= SLOW_SPEED; display <= '1';
+                        when others =>  display <= '0';
+                    end case;
+                when SCORE_SETTING =>
+                    display <= '1';
+                    if setting_in = CR then        --設置結束
+                        score_setting_done <= '1';
+                        display <= '0';
+                    else
+                        score_setting_done <= '0';      
+                        display <= '1';             
+                    end if;
+                    case setting_in is            --設定分數
+                        when a_1 => MAX_SCORE <= 1; display <= '1';
+                        when a_2 => MAX_SCORE <= 2; display <= '1';
+                        when a_3 => MAX_SCORE <= 3; display <= '1';
+                        when a_4 => MAX_SCORE <= 4; display <= '1';
+                        when a_5 => MAX_SCORE <= 5; display <= '1';
+                        when a_6 => MAX_SCORE <= 6; display <= '1';
+                        when a_7 => MAX_SCORE <= 7; display <= '1';
+                        when a_8 => MAX_SCORE <= 8; display <= '1';
+                        when a_9 => MAX_SCORE <= 9; display <= '1';
+                        when others =>  NULL;
+                    end case;
+                when MODE_SETTING =>             
+                    display <= '1';
+                    if setting_in = CR then        --設置結束
+                        mode_setting_done <= '1';
+                        display <= '0';                        
+                    else
+                        mode_setting_done <= '0';                   
+                    end if;
+                    case setting_in is             --設定模式
+                        when a_1 => random_en <= '0';
+                        when a_2 => random_en <= '1';
+                        when others =>NULL;
+                    end case;                                               
+                when others => NULL;
+            end case;
+        end if;
     end if;
 end process;
 
-score2ascii     :process(rst,clk,score_left,score_right)
+score2ascii     :process(rst,clk,score_left,score_right)    --將訊號轉為ASCII CODE
 begin
     if rst = '1' then
         ascii_score_left  <= a_0;
@@ -222,7 +336,6 @@ begin
     if rst = '1' then
         win_left <= '0';
         win_right <= '0';    
-        MAX_SCORE <= 9 ;
     else
         if rising_edge(clk)then
             if score_right = MAX_SCORE then
@@ -246,7 +359,7 @@ begin
     else
         if rising_edge(clk)then
             case OUTPUT_MODE is
-                when SCORE =>
+                when SCORE =>           --輸出分數
                     case str_num is
                         when 0 => str <= l;
                         when 1 => str <= e;
@@ -256,56 +369,33 @@ begin
                         when 5 => str <= colon;
                         when 6 => str <= space;                                                                        
                         when 7 => str <= ascii_score_left;
-                        when 8 => str <= FF; 
-                        when 9 => str <= BS;
-                        when 10 => str <= BS;
-                        when 11 => str <= BS;
-                        when 12 => str <= BS;
-                        when 13 => str <= BS;
-                        when 14 => str <= BS;
-                        when 15 => str <= BS;
-                        when 16 => str <= BS;                                                                                                                                                   
-                        when 17 => str <= r;
-                        when 18 => str <= i;
-                        when 19 => str <= g;
-                        when 20 => str <= h;
-                        when 21 => str <= t;
-                        when 22 => str <= space;
-                        when 23 => str <= colon;
-                        when 24 => str <= space;                    
-                        when 25 => str <= ascii_score_right;
-                        when 26 => str <= FF;
-                        when 27 => str <= BS;
-                        when 28 => str <= BS;
-                        when 29 => str <= BS;
-                        when 30 => str <= BS;
-                        when 31 => str <= BS;
-                        when 32 => str <= BS;
-                        when 33 => str <= BS;
-                        when 34 => str <= BS;
-                        when 35 => str <= BS;
-                        when 36 => str <= dash;
-                        when 37 => str <= dash;
-                        when 38 => str <= dash;
-                        when 39 => str <= dash;
-                        when 40 => str <= dash;
-                        when 41 => str <= dash;
-                        when 42 => str <= dash;
-                        when 43 => str <= dash;                    
-                        when 44 => str <= dash;
-                        when 45 => str <= FF;
-                        when 46 => str <= BS;
-                        when 47 => str <= BS;
-                        when 48 => str <= BS;
-                        when 49 => str <= BS;
-                        when 50 => str <= BS;
-                        when 51 => str <= BS;
-                        when 52 => str <= BS;
-                        when 53 => str <= BS;
-                        when 54 => str <= BS;                                    
+                        when 8 => str <= LF; 
+                        when 9 => str <= CR;                                                                                                                                                
+                        when 10 => str <= r;
+                        when 11 => str <= i;
+                        when 12 => str <= g;
+                        when 13 => str <= h;
+                        when 14 => str <= t;
+                        when 15 => str <= space;
+                        when 16 => str <= colon;
+                        when 17 => str <= space;                    
+                        when 18 => str <= ascii_score_right;
+                        when 19 => str <= LF;
+                        when 20 => str <= CR;
+                        when 21 => str <= dash;
+                        when 22 => str <= dash;
+                        when 23 => str <= dash;
+                        when 24 => str <= dash;
+                        when 25 => str <= dash;
+                        when 26 => str <= dash;
+                        when 27 => str <= dash;
+                        when 28 => str <= dash;                    
+                        when 29 => str <= dash;
+                        when 30 => str <= LF;
+                        when 31 => str <= CR;                                  
                         when others => NULL;
                     end case;
-                when WIN =>
+                when WIN =>             --輸出勝利
                     case str_num is
                         when 0 => str <= w;
                         when 1 => str <= i;
@@ -345,13 +435,17 @@ begin
                                 str <= t;
                             elsif win_right = '1' then
                                 str <= t;
-                            end if;           
+                            end if;
+                        when 14 => str <= LF;
+                        when 15 => str <= CR;
+                        when 16 => NULL;
                         when others => NULL;                                             
                     end case;
-                when SETTING =>
+                when SETTING =>         --輸出選單
                     case SETTING_MODE is
                         when IDLE =>
                             case str_num is
+                                --SETTING_MODE :              
                                 when 0 => str <= B_S;
                                 when 1 => str <= B_E;
                                 when 2 => str <= B_E;
@@ -364,10 +458,12 @@ begin
                                 when 9 => str <= B_M;
                                 when 10 => str <= B_O;
                                 when 11 => str <= B_D;
-                                when 12 => str <= B_E;
+                                when 12 => str <= B_E;                                
                                 when 13 => str <= space;
                                 when 14 => str <= colon;
                                 when 15 => str <= space;
+                                --
+                                -- (1) SPEED
                                 when 16 => str <= left_p;
                                 when 17 => str <= a_1;
                                 when 18 => str <= right_p;
@@ -378,6 +474,8 @@ begin
                                 when 23 => str <= B_E;
                                 when 24 => str <= B_D;
                                 when 25 => str <= space;
+                                --
+                                -- (2) SCORE 
                                 when 26 => str <= left_p;
                                 when 27 => str <= a_2;
                                 when 28 => str <= right_p;
@@ -388,15 +486,31 @@ begin
                                 when 33 => str <= B_R;
                                 when 34 => str <= B_E;
                                 when 35 => str <= space;
+                                --
+                                -- (3)MODE 
                                 when 36 => str <= left_p;
-                                when 37 => str <= a_9;
+                                when 37 => str <= a_3;
                                 when 38 => str <= right_p;
                                 when 39 => str <= space;
-                                when 40 => str <= B_Q;
-                                when 41 => str <= B_U;
-                                when 42 => str <= B_I;
-                                when 43 => str <= B_T;
-                                when 44 => str <= FF;                                
+                                when 40 => str <= B_M;
+                                when 41 => str <= B_O;
+                                when 42 => str <= B_D;
+                                when 43 => str <= B_E;
+                                when 44 => str <= space;                                
+                                --
+                                --(ESC) QUIT
+                                when 45 => str <= left_p;
+                                when 46 => str <= B_E;
+                                when 47 => str <= B_S;
+                                when 48 => str <= B_C;
+                                when 49 => str <= right_p;
+                                when 50 => str <= space;
+                                when 51 => str <= B_Q;
+                                when 52 => str <= B_U;
+                                when 53 => str <= B_I;
+                                when 54 => str <= B_T;
+                                when 55 => str <= LF;  
+                                when 56 => str <= CR;                              
                                 when others => NULL;                                                                                                                                                                                                                            
                             end case;
                         when SPEED_SETTING =>
@@ -447,7 +561,8 @@ begin
                                 when 43 => str <= B_E;
                                 when 44 => str <= B_E;
                                 when 45 => str <= B_D;
-                                when 46 => str <= FF;                                
+                                when 46 => str <= LF;      
+                                when 47 => str <= CR;                          
                                 when others => NULL;
                             end case;
                         when SCORE_SETTING =>
@@ -481,9 +596,54 @@ begin
                                 when 26 => str <= space;
                                 when 27 => str <= colon;
                                 when 28 => str <= space;
-                                when 29 => str <= setting_in;
-                                when 30 => str <= FF;                                
+                                when 29 => str <= LF;   
+                                when 30 => str <= CR;                                                             
                                 when others => NULL;
+                            end case;
+                        when MODE_SETTING =>
+                            case str_num is
+                                when 0 => str <= left_p;
+                                when 1 => str <= a_1;
+                                when 2 => str <= right_p;
+                                when 3 => str <= space;
+                                when 4 => str <= B_N;
+                                when 5 => str <= B_O;
+                                when 6 => str <= B_R;
+                                when 7 => str <= B_M;
+                                when 8 => str <= B_A;
+                                when 9 => str <= B_L;
+                                when 10 => str <= baseline;
+                                when 11 => str <= B_M;
+                                when 12 => str <= B_O;
+                                when 13 => str <= B_D;
+                                when 14 => str <= B_E;
+                                when 15 => str <= space;
+                                when 16 => str <= left_p;
+                                when 17 => str <= a_2;
+                                when 18 => str <= right_p;
+                                when 19 => str <= space;  
+                                when 20 => str <= B_V;
+                                when 21 => str <= B_A;
+                                when 22 => str <= B_R;
+                                when 23 => str <= B_I;
+                                when 24 => str <= B_A;
+                                when 25 => str <= B_B;
+                                when 26 => str <= B_L;
+                                when 27 => str <= B_E;
+                                when 28 => str <= baseline;
+                                when 29 => str <= B_S;
+                                when 30 => str <= B_P;
+                                when 31 => str <= B_E;
+                                when 32 => str <= B_E;
+                                when 33 => str <= B_D;
+                                when 34 => str <= baseline;
+                                when 35 => str <= B_M;
+                                when 36 => str <= B_O;
+                                when 37 => str <= B_D;
+                                when 38 => str <= B_E;
+                                when 39 => str <= LF;
+                                when 40 => str <= CR;                                
+                                when others => NULL;    
                             end case;
                         when others => NULL;
                     end case;

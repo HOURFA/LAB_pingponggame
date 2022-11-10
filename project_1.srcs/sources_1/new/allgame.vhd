@@ -1,3 +1,23 @@
+----------------------------------------------------------------------------------
+-- Company:  NKUST
+-- Engineer:  RFA
+-- 
+-- Create Date: 2022/11/09 20:07:47
+-- Design Name: 
+-- Module Name: random_genetor - Behavioral
+-- Project Name: 
+-- Target Devices: 
+-- Tool Versions: 
+-- Description: 
+-- 
+-- Dependencies: 
+-- 
+-- Revision:
+-- Revision 0.01 - File Created
+-- Additional Comments:
+-- 
+----------------------------------------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.std_logic_unsigned.all;
@@ -18,6 +38,8 @@ architecture game of allgame is
 component div is port(
     rst                      :  in std_logic;
     UB                    :  in integer;
+    random_value     :  in std_logic_vector(3 downto 0);
+    random_en         :  in std_logic;
     clk_in                :  in std_logic;
     clk_out              : out std_logic);
 end component;
@@ -32,6 +54,7 @@ end component;
 component FSM is port(
     rst                  :  in std_logic;
     clk                  :  in std_logic;
+    en                   :  in std_logic;
     click_left           :  in std_logic;
     click_right          :  in std_logic;        
     led_loc              :  in std_logic_vector(3 downto 0 );
@@ -74,6 +97,7 @@ end component;
 component input_controller is Port (
     rst : in STD_LOGIC;
     clk : in STD_LOGIC; 
+    clr : in STD_LOGIC;
     ascii_in : in STD_LOGIC_VECTOR(7 downto 0);
     enter       :out STD_LOGIC;
     buttom_left : out STD_LOGIC;
@@ -90,7 +114,16 @@ component output_controller is Port (
     tx_series : out STD_LOGIC_VECTOR (7 downto 0);
     tx_en : out std_logic;
     rst_system : out std_logic;
-    DIV_CLK_CONSTANT : out integer);
+    DIV_CLK_CONSTANT : out integer;
+    random_en        : out STD_LOGIC;
+    game_start :  out std_logic);
+end component;
+
+component random_genetor is Port(
+    clk  : in std_logic;
+    rst  : in std_logic;
+    en  : in std_logic;
+    random_value : out std_logic_vector(3 downto 0));
 end component;
 
 signal score_left_sig            :std_logic_vector(3 downto 0);
@@ -114,8 +147,10 @@ signal rx_data ,de_bug,setting_in:std_logic_vector(7 downto 0);
 signal tx_series :std_logic_vector(7 downto 0);
 signal div_clk : std_logic;
 signal tx_enable,baund_enable : std_logic;
-signal rst_system,rst_all,score_en,sda_master,rx_en,enter,s_en: std_logic;
+signal rst_system,rst_all,score_en,sda_master,rx_en,enter,s_en,game_start: std_logic;
 signal DIV_CLK_CONSTANT : integer;
+signal random_en , plus , minus : std_logic;
+signal random_value : std_logic_vector(3 downto 0);
 
 begin
 
@@ -125,6 +160,8 @@ rst_all <= rst or rst_system;
 div1    : div      port map(
     rst                => rst_all,
     UB                 => DIV_CLK_CONSTANT,
+    random_en          => random_en,
+    random_value       => random_value,
     clk_in             => clk,
     clk_out            => divclk);
 left    : buttom    port map(
@@ -137,9 +174,16 @@ right   : buttom    port map(
     clk                => clk,
     click              => click_right,
     buttom             => de_buttom_right_sig);
+random : random_genetor Port map(
+    clk                => clk,
+    rst                => rst_all,
+    en                 => random_en,
+   random_value        => random_value);
+    
 SYSTEM  : FSM       port map(
     rst                => rst_all,
     clk                => divclk,
+    en                 => game_start,
     led_loc            => led_reg,
     click_left         => de_buttom_left_sig,
     click_right        => de_buttom_right_sig,
@@ -155,7 +199,7 @@ led_act : led_action port map (
     act                => act,
     led                => led_reg);
 l       : led8      port map(
-    q                  => led_reg,
+    q                  => led_reg,            
     led                => led_bus);                              
 rx_uart : UART_RX port map(
     clk                => clk,
@@ -171,7 +215,8 @@ tx_uart : UART_TX port map(
     tx_data            => tx_series);
 input : input_controller port map(
     rst                => rst_all,
-    clk                => divclk,
+    clk                => clk,
+    clr                => display_en,
     ascii_in           => rx_data,
     enter              => enter,
     buttom_left        => uart_player_left,
@@ -189,7 +234,9 @@ output : output_controller port map(
     tx_series          => tx_series,
     tx_en              => score_en,
     rst_system         => rst_system,
-    DIV_CLK_CONSTANT   => DIV_CLK_CONSTANT); 
+    DIV_CLK_CONSTANT   => DIV_CLK_CONSTANT,
+    random_en          => random_en,
+    game_start         => game_start); 
 process(display_en)
 begin
     if display_en = '1'then

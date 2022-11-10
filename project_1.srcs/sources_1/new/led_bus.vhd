@@ -19,6 +19,7 @@ begin
               when "0101" => led <= "00100000";
               when "0110" => led <= "01000000";
               when "0111" => led <= "10000000";
+              when "1001" => led <= "11111111";
               when others => led <= "00000000";
     end case;
 end process;

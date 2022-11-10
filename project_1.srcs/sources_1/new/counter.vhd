@@ -1,11 +1,32 @@
+----------------------------------------------------------------------------------
+-- Company:  NKUST
+-- Engineer:  RFA
+-- 
+-- Create Date: 2022/11/09 20:07:47
+-- Design Name: 
+-- Module Name: random_genetor - Behavioral
+-- Project Name: 
+-- Target Devices: 
+-- Tool Versions: 
+-- Description: 
+-- 
+-- Dependencies: 
+-- 
+-- Revision:
+-- Revision 0.01 - File Created
+-- Additional Comments:
+-- 
+----------------------------------------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.all;
 entity FSM is 
     port(
-            rst                  :  in std_logic;
-            clk                  :  in std_logic;
+            rst                    :  in std_logic;
+            clk                    :  in std_logic;
+            en                     :  in std_logic;
             click_left           :  in std_logic;
             click_right          :  in std_logic;                   
             led_loc              :  in std_logic_vector(3 downto 0 );
@@ -27,13 +48,14 @@ begin
 if rst = '1' then
 	hit 	<= sa;
 	ps 		<= '0';
-	led_act <= "100";
+	led_act <= "101";
 	point_a <= (others => '0');--右邊
 	point_b <= (others => '0');--左邊	
 else
     if rising_edge(clk) then
+        if en = '1' then
             case hit is
-                when sa  => 
+                when sa  => led_act	<= "100";
                             ps	<= '0';
                             if click_left = '1' then--a發球  
                                 ps	<= '1';
@@ -41,7 +63,7 @@ else
                                 hit <= hb;                                                                	                           
                             elsif click_left = '0' then hit <= sa;
                             end if;
-                when sb  =>
+                when sb  =>led_act	<= "100";
                             ps	<= '1';    
                             if click_right = '1' then --b發球 
                                 ps	<= '0'; 
@@ -94,6 +116,7 @@ else
             end case;
         end if;
     end if;
+end if;
 prestate    <= ps;
 score_left 	<= point_a;
 score_right <= point_b;    

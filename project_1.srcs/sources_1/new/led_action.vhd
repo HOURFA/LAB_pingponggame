@@ -1,3 +1,23 @@
+----------------------------------------------------------------------------------
+-- Company:  NKUST
+-- Engineer:  RFA
+-- 
+-- Create Date: 2022/11/09 20:07:47
+-- Design Name: 
+-- Module Name: random_genetor - Behavioral
+-- Project Name: 
+-- Target Devices: 
+-- Tool Versions: 
+-- Description: 
+-- 
+-- Dependencies: 
+-- 
+-- Revision:
+-- Revision 0.01 - File Created
+-- Additional Comments:
+-- 
+----------------------------------------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.std_logic_unsigned.all;
@@ -45,6 +65,10 @@ else
                             elsif prestate = '0'    then temp 	    <= "0111";
                             end if;	                   	
                        end if;
+           when "101" => temp <= "1000";
+                         if temp = "1000"then
+                            temp <= "1001";
+                         end if;
             when others => NULL;
         end case;
     end if;	
