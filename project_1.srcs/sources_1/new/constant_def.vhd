@@ -43,6 +43,8 @@ package constant_def is
     constant        ball_radius             : integer := 50;
     constant        right_bound             : integer := horizontal_resolution - ( ball_radius / 2);
     constant        left_bound              : integer := ball_radius / 2;
+    constant        img_height              : integer := 100;
+    constant        img_width              : integer := 100;
     --
     ---------------------------------------------------------------------------------------------VGA_const 1920X1080    
 end package;

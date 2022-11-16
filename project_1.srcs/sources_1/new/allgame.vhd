@@ -64,8 +64,22 @@ component vga is port(
     hsync                 : out std_logic;
     vsync                 : out std_logic);
  end component;
- 
- 
+component addres_counter is
+    Port (
+        clk             : in std_logic;
+        reset           : in std_logic;    
+        shift       : in integer;      
+        vga_vs_cnt      : in integer;
+        vga_hs_cnt      : in integer;
+        en              : out std_logic;
+        addra           : out std_logic_vector (13 downto 0));
+end component; 
+component blk_mem_gen_0 IS PORT (
+    clka : IN STD_LOGIC;
+    ena : IN STD_LOGIC;
+    addra : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
+    douta : OUT STD_LOGIC_VECTOR(11 DOWNTO 0));
+end component;
 component divider is Port (
         clk             : in std_logic;
         reset           : in std_logic;
@@ -79,6 +93,8 @@ component VGA_display is Port (
     vga_vs_cnt : in integer;
     vga_hs_cnt : in integer;
     prestate    : in std_logic;    
+    shift       : inout integer;    
+    img_in          : in std_logic_vector(11 downto 0);    
     act : in std_logic_vector(2 downto 0);
     Rout            : inout std_logic_vector(3 downto 0); --
     Gout            : inout std_logic_vector(3 downto 0); --
@@ -189,8 +205,14 @@ signal random_value : std_logic_vector(3 downto 0);
 
 signal Rout_sig ,Gout_sig , Bout_sig : std_logic_vector(3 downto 0);
 
-signal vga_hs_cnt , vga_vs_cnt : integer;
+signal vga_hs_cnt , vga_vs_cnt,shift : integer;
 
+
+-- bram
+signal bram_en : std_logic;
+signal img_data : std_logic_vector(11 downto 0);
+signal bram_addr : std_logic_vector(13 downto 0);
+--
 begin
 
 click_left <= buttom_player_left or uart_player_left;
@@ -212,6 +234,19 @@ div1    : div      port map(
     random_value       => random_value,
     clk_in             => clk,
     clk_out            => divclk);
+addr_counter_1 :addres_counter port map(
+    clk            => div_50Mhz,
+    reset          => rst_all,
+    shift          => shift,     
+    vga_vs_cnt     => vga_vs_cnt,
+    vga_hs_cnt     => vga_hs_cnt,
+    en             => bram_en,
+    addra          => bram_addr);    
+bram : blk_mem_gen_0 port map(
+    clka => div_50Mhz,
+    ena  => bram_en,
+    addra => bram_addr ,
+    douta => img_data);
 vga_1 :vga port map( 
     clk             => clk, --
     rst             => rst_all,
@@ -226,6 +261,8 @@ vga_display_1 : VGA_display Port map(
     div_clk     => divclk,
     rst         => rst_all,
     prestate    => ps,
+    img_in      => img_data,
+    shift       => shift,
     vga_vs_cnt => vga_vs_cnt,
     vga_hs_cnt => vga_hs_cnt,
     act        => act,
