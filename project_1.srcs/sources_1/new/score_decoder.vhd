@@ -78,26 +78,26 @@ tx_baud :baud port map(
     
 tx_series <= str;       --output
 
-FSM_process : process(rst,clk,str_num)        --輸出的FSM
+FSM_process : process(rst,clk,str_num)        --??X??FSM
 begin
     if rst = '1' then
         SYSTEM_FSM <= IDLE;
     else
         if rising_edge(clk) then
             case SYSTEM_FSM is  
-                when IDLE    =>             --等待en = '1' 啟動FSM
+                when IDLE    =>             --????en = '1' ???FSM
                     if display_en = '1' or display = '1'then
                         SYSTEM_FSM <= READ;
                     else
                         SYSTEM_FSM <= IDLE;
                     end if;
-                when READ    =>             --輸出所有要輸出的str後轉態
+                when READ    =>             --??X????n??X??str????A
                     if str_num = UB then
                         SYSTEM_FSM <= WAIT_EN;
                     else
                         SYSTEM_FSM <= READ;
                     end if;    
-                when WAIT_EN =>             --因display_en = '1' 時間還未結束，等到結束後在判斷下次的en
+                when WAIT_EN =>             --?]display_en = '1' ???????????A????????b?P?_?U????en
                     if display_en = '1' or display = '1'then
                         SYSTEM_FSM <= WAIT_EN;
                     elsif display_en = '0'or display = '0' then
@@ -232,7 +232,7 @@ begin
         if rising_edge(clk) then        
             case SETTING_MODE is
                 when IDLE =>
-                    if setting_in = ESC then        --設置結束
+                    if setting_in = ESC then        --?]?m????
                         setting_done <= '1';
                         display <= '0';
                         game_start <= '1';
@@ -241,14 +241,14 @@ begin
                     end if;
                 when SPEED_SETTING =>
                     display <= '1';
-                    if setting_in = CR then        --設置結束
+                    if setting_in = CR then        --?]?m????
                         speed_setting_done <= '1';
                         display <= '0';                        
                     else
                         speed_setting_done <= '0';     
                         display <= '1';                                      
                     end if;
-                    case setting_in is            --設定速度
+                    case setting_in is            --?]?w?t??
                         when a_1 => DIV_CLK_CONSTANT <= HIGH_SPEED; display <= '1';
                         when a_2 => DIV_CLK_CONSTANT <= MIDDLE_SPEED; display <= '1';
                         when a_3 => DIV_CLK_CONSTANT <= SLOW_SPEED; display <= '1';
@@ -256,14 +256,14 @@ begin
                     end case;
                 when SCORE_SETTING =>
                     display <= '1';
-                    if setting_in = CR then        --設置結束
+                    if setting_in = CR then        --?]?m????
                         score_setting_done <= '1';
                         display <= '0';
                     else
                         score_setting_done <= '0';      
                         display <= '1';             
                     end if;
-                    case setting_in is            --設定分數
+                    case setting_in is            --?]?w????
                         when a_1 => MAX_SCORE <= 1; display <= '1';
                         when a_2 => MAX_SCORE <= 2; display <= '1';
                         when a_3 => MAX_SCORE <= 3; display <= '1';
@@ -277,13 +277,13 @@ begin
                     end case;
                 when MODE_SETTING =>             
                     display <= '1';
-                    if setting_in = CR then        --設置結束
+                    if setting_in = CR then        --?]?m????
                         mode_setting_done <= '1';
                         display <= '0';                        
                     else
                         mode_setting_done <= '0';                   
                     end if;
-                    case setting_in is             --設定模式
+                    case setting_in is             --?]?w???
                         when a_1 => random_en <= '0';
                         when a_2 => random_en <= '1';
                         when others =>NULL;
@@ -294,7 +294,7 @@ begin
     end if;
 end process;
 
-score2ascii     :process(rst,clk,score_left,score_right)    --將訊號轉為ASCII CODE
+score2ascii     :process(rst,clk,score_left,score_right)    --?N?T????ASCII CODE
 begin
     if rst = '1' then
         ascii_score_left  <= a_0;
@@ -359,7 +359,7 @@ begin
     else
         if rising_edge(clk)then
             case OUTPUT_MODE is
-                when SCORE =>           --輸出分數
+                when SCORE =>           --??X????
                     case str_num is
                         when 0 => str <= l;
                         when 1 => str <= e;
@@ -395,7 +395,7 @@ begin
                         when 31 => str <= CR;                                  
                         when others => NULL;
                     end case;
-                when WIN =>             --輸出勝利
+                when WIN =>             --??X??Q
                     case str_num is
                         when 0 => str <= w;
                         when 1 => str <= i;
@@ -441,7 +441,7 @@ begin
                         when 16 => NULL;
                         when others => NULL;                                             
                     end case;
-                when SETTING =>         --輸出選單
+                when SETTING =>         --??X???
                     case SETTING_MODE is
                         when IDLE =>
                             case str_num is
@@ -589,10 +589,10 @@ begin
                                 when 19 => str <= m;  
                                 when 20 => str <= space;
                                 when 21 => str <= s;
-                                when 22 => str <= p;
-                                when 23 => str <= e;
-                                when 24 => str <= e;
-                                when 25 => str <= d;
+                                when 22 => str <= c;
+                                when 23 => str <= o;
+                                when 24 => str <= r;
+                                when 25 => str <= e;
                                 when 26 => str <= space;
                                 when 27 => str <= colon;
                                 when 28 => str <= space;

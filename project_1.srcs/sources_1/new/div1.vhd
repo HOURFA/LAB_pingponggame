@@ -48,12 +48,10 @@ begin
     else
         if random_en  = '1' then
             if rising_edge(cnt2)then
-                if random_value(0) = '1' then
-    --                UB_random <= UB + to_integer(unsigned(random_value))*3500000 ;
-                    UB_random <= to_integer(unsigned(random_value))*15000000 ;
-               elsif random_value(0) = '0' then
-    --                UB_random <= UB - to_integer(unsigned(random_value))*4500000 ;
-                    UB_random <= to_integer(unsigned(random_value))*15000000 ;
+                if random_value(3) = '1' then
+                    UB_random <= UB + to_integer(unsigned(random_value))*5000000 ;
+               elsif random_value(3) = '0' then
+                    UB_random <= UB - to_integer(unsigned(random_value))*5000000 ;
                 end if;
             end if;
         else
@@ -64,7 +62,6 @@ begin
         end if;
     end if;
 end process;
---UB_random <= UB;
 process(rst,clk_in,cnt2)    --divider1
     
     begin

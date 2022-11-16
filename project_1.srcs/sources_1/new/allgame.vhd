@@ -31,7 +31,12 @@ entity allgame is port(
     buttom_player_left   :  in std_logic;
     buttom_player_right  :  in std_logic;
     tx                       : out std_logic;
-    led_bus              : out std_logic_vector(LED_NUM - 1 downto 0));           
+    led_bus              : out std_logic_vector(LED_NUM - 1 downto 0);
+   Rout            : out std_logic_vector(3 downto 0); --
+   Gout            : out std_logic_vector(3 downto 0); --
+   Bout            : out std_logic_vector(3 downto 0); -- 
+   hsync           : out std_logic;
+   vsync           : out std_logic);           
 end allgame;
 architecture game of allgame is
 
@@ -50,7 +55,36 @@ component buttom is port(
     click                :  in std_logic;
     buttom               : out std_logic);
 end component;
-
+component vga is port(
+    clk                     : in std_logic;
+    rst                      : in std_logic;
+    video_start_en     : in std_logic;
+    vga_hs_cnt          : out integer;
+    vga_vs_cnt          : out integer;
+    hsync                 : out std_logic;
+    vsync                 : out std_logic);
+ end component;
+ 
+ 
+component divider is Port (
+        clk             : in std_logic;
+        reset           : in std_logic;
+        div_clk        : out std_logic);
+end component;
+ 
+component VGA_display is Port ( 
+    clk : in STD_LOGIC;
+    div_clk : in STD_LOGIC;    
+    rst : in STD_LOGIC;
+    vga_vs_cnt : in integer;
+    vga_hs_cnt : in integer;
+    prestate    : in std_logic;    
+    act : in std_logic_vector(2 downto 0);
+    Rout            : inout std_logic_vector(3 downto 0); --
+    Gout            : inout std_logic_vector(3 downto 0); --
+    Bout            : inout std_logic_vector(3 downto 0));
+end component;
+ 
 component FSM is port(
     rst                  :  in std_logic;
     clk                  :  in std_logic;
@@ -145,18 +179,32 @@ signal ps                    :std_logic;
 
 signal rx_data ,de_bug,setting_in:std_logic_vector(7 downto 0);
 signal tx_series :std_logic_vector(7 downto 0);
-signal div_clk : std_logic;
+signal div_clk  , div_50Mhz: std_logic;
 signal tx_enable,baund_enable : std_logic;
 signal rst_system,rst_all,score_en,sda_master,rx_en,enter,s_en,game_start: std_logic;
 signal DIV_CLK_CONSTANT : integer;
 signal random_en , plus , minus : std_logic;
 signal random_value : std_logic_vector(3 downto 0);
 
+
+signal Rout_sig ,Gout_sig , Bout_sig : std_logic_vector(3 downto 0);
+
+signal vga_hs_cnt , vga_vs_cnt : integer;
+
 begin
 
 click_left <= buttom_player_left or uart_player_left;
 click_right <= buttom_player_right or uart_player_right;
 rst_all <= rst or rst_system;
+
+Rout <= Rout_sig;
+Gout <= Gout_sig;
+Bout <= Bout_sig;
+
+div50M : divider port map(
+        clk            => clk,
+        reset          => rst_all,
+        div_clk        => div_50Mhz);
 div1    : div      port map(
     rst                => rst_all,
     UB                 => DIV_CLK_CONSTANT,
@@ -164,6 +212,26 @@ div1    : div      port map(
     random_value       => random_value,
     clk_in             => clk,
     clk_out            => divclk);
+vga_1 :vga port map( 
+    clk             => clk, --
+    rst             => rst_all,
+    video_start_en  => '1',
+    vga_hs_cnt      => vga_hs_cnt,
+    vga_vs_cnt      => vga_vs_cnt,
+    hsync           => hsync,
+    vsync           => vsync );     
+
+vga_display_1 : VGA_display Port map( 
+    clk         => div_50Mhz,
+    div_clk     => divclk,
+    rst         => rst_all,
+    prestate    => ps,
+    vga_vs_cnt => vga_vs_cnt,
+    vga_hs_cnt => vga_hs_cnt,
+    act        => act,
+    Rout       => Rout_sig,
+    Gout       => Gout_sig,
+    Bout       => Bout_sig);
 left    : buttom    port map(
     rst                => rst_all,
     clk                => clk,
