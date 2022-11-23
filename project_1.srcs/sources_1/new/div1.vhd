@@ -22,7 +22,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
 use work.constant_def.all;
-entity div is
+entity Random_div is
     port(
             rst                      :  in std_logic;
             UB                    :  in integer;
@@ -31,8 +31,8 @@ entity div is
             clk_in                :  in std_logic;
             clk_out              : out std_logic
     );
-end div;
-architecture arch1 of div is
+end Random_div;
+architecture arch1 of Random_div is
 
 signal cnt2 ,rst_random       :std_logic;
 signal cnt1      : integer ;

@@ -1,13 +1,13 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-entity divider is
+entity VGA_div is
     Port (
         clk             : in std_logic;
         reset           : in std_logic;
         div_clk        : out std_logic);
-end divider;
+end VGA_div;
 
-architecture Behavioral of divider is
+architecture Behavioral of VGA_div is
 signal CLK50mhz  :std_logic;
 signal cnt_total , cnt_1 , cnt_2 : integer; 
 begin

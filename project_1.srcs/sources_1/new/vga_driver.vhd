@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 use ieee.std_logic_arith.all;
 use work.constant_def.all;
 use work.ascii_decoder_lib.all;
-entity vga is
+entity vga_driver is
     port(
         clk : in std_logic;
         rst : in std_logic;
@@ -15,9 +15,9 @@ entity vga is
         hsync : out std_logic;
         vsync : out std_logic
     );
-end vga;
+end vga_driver;
 
-architecture vga_controller of vga is
+architecture vga_controller of vga_driver is
 
 signal vga_hs_cnt_s : integer;
 signal vga_vs_cnt_s : integer;

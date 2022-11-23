@@ -21,15 +21,15 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
-entity random_genetor is Port ( 
+entity Random_genetor is Port ( 
     clk : in STD_LOGIC;
     rst : in STD_LOGIC;
     en : in STD_LOGIC;
     random_value : out std_logic_vector(3 downto 0));
-end random_genetor;
+end Random_genetor;
 
 
-architecture Behavioral of random_genetor is
+architecture Behavioral of Random_genetor is
 
 signal cnt : std_logic_vector(3 downto 0);
 

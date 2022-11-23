@@ -38,7 +38,7 @@ architecture Behavioral of input_controller is
 signal  pre: STD_LOGIC_VECTOR(7 downto 0);
 signal done,divclk : std_logic;
 signal cnt : integer;
-component div is port(
+component random_div is port(
     rst                      :  in std_logic;
     UB                    :  in integer;
     random_en         :  in std_logic;
@@ -47,7 +47,7 @@ component div is port(
 end component;
 begin
 
-div1    : div      port map(
+div1    : random_div      port map(
     rst                => rst,
     UB                 => 40000000,
     random_en          => '0',
@@ -79,28 +79,12 @@ begin
                 else
                     enter <= '0';
                 end if;
---            elsif pre = q or pre = o then
---                if ascii_in = a then
---                    buttom_left <= '1';
---                    random_en <= '1';
---                else
---                    buttom_left <= '0';
---                end if;
---                if ascii_in = l then
---                    buttom_right <= '1';
---                    random_en <= '1';
---                else
---                    buttom_right <= '0';
---                end if;                
+  
             else
                 buttom_left <= '0';
                 buttom_right <= '0';
                 enter <= '0';
             end if;
---        if clr = '1' then
---            pre <= (others => '0');
---            random_en <= '0';              
---        end if;
        end if;
     end if;
 end process;
