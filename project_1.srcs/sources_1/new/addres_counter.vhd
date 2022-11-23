@@ -37,34 +37,39 @@ architecture Behavioral of addres_counter is
 signal cnt_addr : std_logic_vector (13 downto 0);
 signal ena,clr : std_logic;
 begin
- process(clk,reset,cnt_addr,ena)
- begin
-if (reset = '1') then
-    cnt_addr <= (others => '0');
-else
-    if rising_edge(clk) and (ena = '1') then   
-        if clr = '1' then
-            cnt_addr <= (others => '0');
+process(clk,reset,cnt_addr,ena)
+begin
+    if (reset = '1') then
+        cnt_addr <= (others => '0');
+    else
+        if rising_edge(clk)  then   
+            if (clr = '0') then
+                if ena = '1' then
+                    if cnt_addr = (img_height*img_width)-1 then 
+                        cnt_addr <= (others => '0');
+                    elsif cnt_addr < (img_height*img_width)-1 then
+                         cnt_addr <= cnt_addr + '1' ;           
+                    end if;
+                end if;
+            else
+                cnt_addr <= (others => '0');
+            end if;
         end if;
-        if cnt_addr = (img_height*img_width)-1 then cnt_addr <= (others => '0');
-        elsif cnt_addr < (img_height*img_width)-1 then
-             cnt_addr <= cnt_addr + '1' ;            
-        end if;
-    end if;
- end if; 
+    end if; 
 addra     <= cnt_addr;
- end process;
- process(vga_vs_cnt,vga_hs_cnt)
- begin
- if (vga_vs_cnt >= (center_v-(img_height/2))) and (vga_vs_cnt < (center_v+(img_height/2)))
-    and(vga_hs_cnt >= (shift-(img_width/2))) and (vga_hs_cnt <(shift+(img_width/2))) then 
-    ena <= '1';
- elsif vga_vs_cnt > (center_v+(img_height/2)) then
-    clr <= '1';
- else
-    clr <= '0';
-    ena <= '0';
- end if;
- end process;
- en <= ena;
+end process;
+process(vga_vs_cnt,vga_hs_cnt)
+begin
+    if (vga_vs_cnt > (center_v+(img_height/2))) then
+        clr <= '1';
+    else
+        clr <= '0';
+    end if;
+    if (vga_vs_cnt >= (center_v-(img_height/2))) and (vga_vs_cnt < (center_v+(img_height/2))) and(vga_hs_cnt >= (shift-(img_width/2))) and (vga_hs_cnt <(shift+(img_width/2))) then 
+        ena <= '1';
+    else
+        ena <= '0';
+    end if;
+end process;
+en <= ena;
 end Behavioral;

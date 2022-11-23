@@ -248,7 +248,7 @@ bram : blk_mem_gen_0 port map(
     addra => bram_addr ,
     douta => img_data);
 vga_1 :vga port map( 
-    clk             => clk, --
+    clk             => div_50Mhz, --
     rst             => rst_all,
     video_start_en  => '1',
     vga_hs_cnt      => vga_hs_cnt,

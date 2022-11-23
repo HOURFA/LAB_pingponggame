@@ -61,7 +61,8 @@ begin
     else
         if rising_edge(clk)then
             if (vga_hs_cnt < horizontal_resolution  and vga_vs_cnt < vertical_resolution ) then   
-                if ((vga_vs_cnt-center_v)*(vga_vs_cnt-center_v) + (vga_hs_cnt- shift)*(vga_hs_cnt-shift))< ball_radius * ball_radius  then
+                if (vga_vs_cnt >= (center_v-(img_height/2))) and (vga_vs_cnt < (center_v+(img_height/2)))
+                    and(vga_hs_cnt >= (shift-(img_width/2))) and (vga_hs_cnt <(shift+(img_width/2)))  then
                     Rout <= img_in(11 downto 8);
                     Gout <= img_in(7 downto 4);
                     Bout <= img_in(3 downto 0);
@@ -91,13 +92,21 @@ begin
                     shift <= shift - (50 * 2);
                 end if;                                
                 when "001" => -- right_shift
-                if shift > 0 then
+                if shift > 0 then                    
                     shift <= shift + (50 * 2);
                 end if;                
                 when "010" => --¥k¦^À»
-                    shift <= shift - (50 * 2);
-                when "011" => NULL;
-                    shift <= shift + (50 * 2);                
+                    if shift > horizontal_resolution - 50 then
+                        shift <= horizontal_resolution -150;
+                    else
+                        shift <= shift - (50 * 2);
+                    end if;
+                when "011" =>
+                    if shift < 100 then
+                        shift <= 150;
+                    else
+                        shift <= shift + (50 * 2);
+                    end if;
                 when "100" => 
                     if prestate = '1' then
                         shift <= horizontal_resolution - 50;
