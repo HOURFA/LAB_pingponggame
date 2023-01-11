@@ -42,7 +42,8 @@ entity Controller_module is port(
     o_prestate             : out std_logic;
     o_led_act              : out std_logic_vector(2 downto 0);
     o_score_left           : out std_logic_vector(3 downto 0);
-    o_score_right          : out std_logic_vector(3 downto 0));
+    o_score_right          : out std_logic_vector(3 downto 0);
+    o_i2c_rw                : out std_logic);
 end Controller_module;
 
 architecture Behavioral of Controller_module is
@@ -58,7 +59,9 @@ component FSM is port(
     prestate             : out std_logic;
     led_act              : out std_logic_vector(2 downto 0);
     score_left           : out std_logic_vector(3 downto 0);
-    score_right          : out std_logic_vector(3 downto 0));
+    score_right          : out std_logic_vector(3 downto 0);
+    i2c_rw               : out std_logic
+    );
     
 end component;
 begin
@@ -74,5 +77,6 @@ SYSTEM  : FSM       port map(
     score_right        => o_score_right,
     display_en         => o_display_en,
     led_act            => o_led_act,
-    prestate           => o_prestate);
+    prestate           => o_prestate,
+    i2c_rw             => o_i2c_rw);
 end Behavioral;

@@ -42,11 +42,11 @@ end Divider_module;
 
 architecture Behavioral of Divider_module is
 component Random_div is port(
-    rst                      :  in std_logic;
-    UB                    :  in integer;
+    rst                        :  in std_logic;
+    UB                      :  in integer;
     random_value     :  in std_logic_vector(3 downto 0);
     random_en         :  in std_logic;
-    clk_in                :  in std_logic;
+    clk_in                 :  in std_logic;
     clk_out              : out std_logic);
 end component;
 component VGA_div is Port (
@@ -61,7 +61,7 @@ component Random_genetor is Port(
     random_value : out std_logic_vector(3 downto 0));        
 end component;
 
-signal sig_random_value : std_logic_vector(3 downto 0);
+signal sig_rvalue : std_logic_vector(3 downto 0);
 
 begin
 
@@ -74,13 +74,13 @@ RANDOM_DIVIDER : Random_div port map(
     rst                => i_rst,
     UB                 => i_UB,
     random_en          => i_random_en,
-    random_value       => sig_random_value,
+    random_value       => sig_rvalue,
     clk_in             => i_clk,
     clk_out            => o_random_div);
 Random : random_genetor Port map(
     clk                => i_clk,
     rst                => i_rst,
     en                 => i_random_en,
-   random_value        => sig_random_value);    
+   random_value        => sig_rvalue);    
     
 end Behavioral;

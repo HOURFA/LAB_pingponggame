@@ -31,10 +31,11 @@ entity FSM is
             click_right          :  in std_logic;                   
             led_loc              :  in std_logic_vector(3 downto 0 );
             display_en : out std_logic;
-            prestate             : out std_logic;
-            led_act              : out std_logic_vector(2 downto 0);
-            score_left           : out std_logic_vector(3 downto 0);
-            score_right          : out std_logic_vector(3 downto 0)
+            prestate                : out std_logic;
+            led_act                : out std_logic_vector(2 downto 0);
+            score_left            : out std_logic_vector(3 downto 0);
+            score_right         : out std_logic_vector(3 downto 0);
+            i2c_rw               : out std_logic
     ); 
 end FSM;
 architecture main of FSM is
@@ -46,16 +47,18 @@ begin
 process(rst,clk,click_left,click_right,hit,led_loc)
 begin
 if rst = '1' then
-	hit 	<= sa;
+	hit 	<= sb;
 	ps 		<= '0';
 	led_act <= "101";
 	point_a <= (others => '0');--右邊
 	point_b <= (others => '0');--左邊	
+	i2c_rw <= '0';
 else
     if rising_edge(clk) then
         if en = '1' then
             case hit is
-                when sa  => led_act	<= "100";
+                when sa  => i2c_rw <= '0';
+                            led_act	<= "100";
                             ps	<= '0';
                             if click_left = '1' then--a發球  
                                 ps	<= '1';
@@ -71,8 +74,9 @@ else
                                 hit <= ha;                                                               
                             elsif click_right = '0' then hit <= sb;
                             end if;
-                when ha  => case click_left is 
-                                when '1' => if led_loc = "0111" then--正確回擊
+                when ha  => i2c_rw <= '0';
+                            case click_left is 
+                                when '1' => if led_loc = "1111" then--正確回擊
                                                 led_act  <= "011";
                                                 hit <= hb;
                                             else --錯誤回擊
@@ -81,7 +85,7 @@ else
                                                 hit 	<= j; 
                                             end if;
                                 when '0' => case led_loc is    	                                               
-                                                when "0111" =>     --沒有打到球
+                                                when "1111" =>     --沒有打到球
                                                     point_b <= point_b +1 ;
                                                     led_act 		<= "100";                                                 
                                                     hit  	<= j;
@@ -89,7 +93,8 @@ else
                                             end case;
                                 when others =>hit <= ha;
                             end case;
-                when hb  => case click_right is 
+                when hb  =>  i2c_rw <= '1';
+                            case click_right is
                                 when '1' => if led_loc = "0000" then--正確回擊
                                                 led_act  <= "010";
                                                 hit <= ha;

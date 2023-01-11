@@ -88,24 +88,25 @@ begin
         if rising_edge(div_clk)then
             case act is
                 when "000" => -- left_shift
-                if shift <= horizontal_resolution - 50 then
-                    shift <= shift - (50 * 2);
+                if shift > 0 then        
+                    shift <= shift - (50 );
                 end if;                                
                 when "001" => -- right_shift
-                if shift > 0 then                    
-                    shift <= shift + (50 * 2);
+
+                if shift <= horizontal_resolution - 50 then                            
+                    shift <= shift + (50 );
                 end if;                
                 when "010" => --¥k¦^À»
                     if shift > horizontal_resolution - 50 then
                         shift <= horizontal_resolution -150;
                     else
-                        shift <= shift - (50 * 2);
+                        shift <= shift - (50 );
                     end if;
                 when "011" =>
                     if shift < 100 then
                         shift <= 150;
                     else
-                        shift <= shift + (50 * 2);
+                        shift <= shift + (50 );
                     end if;
                 when "100" => 
                     if prestate = '1' then

@@ -34,45 +34,43 @@ end led_action;
 
 architecture Behavioral of led_action is
 
-signal temp:std_logic_vector(3 downto 0);
+signal temp:std_logic_vector(4 downto 0);
 begin
 process(rst,clk,act) 
 begin
 if rst = '1' then
-	temp <= "1000";	
+	temp <= "10000";	
 else        
     if rising_edge(clk) then 
         case act is
-            when "000"  =>if temp = "1000"     then     temp     <="0000";
-                       elsif temp = "0111"   then     temp 	  <= "1000";    
+            when "000"  =>if temp = "10000"     then     temp     <="00000";
+                       elsif temp = "01111"   then     temp 	  <= "10000";    
                        end if;
-                       if temp < "0111"      then     temp     <= unsigned(temp)+1;--路徑a 
+                       if temp < "01111"      then     temp     <= unsigned(temp)+1;--左移
                        end if;                              
-            when "001"  =>if temp = "1000"      then     temp    <= "0110";                                                  
-                       elsif temp = "0000"    then     temp    <= "1000";
+            when "001"  =>if temp = "10000"      then     temp    <= "01110";                                                  
+                       elsif temp = "00000"    then     temp    <= "10000";
                        end if;
-                       if temp > "0000"       then     temp    <= unsigned(temp)-1;--路徑b
+                       if temp > "00000"       then     temp    <= unsigned(temp)-1;--右移
                        end if;                            
-            when "010" =>if temp >= "1000"     then     temp    <= "0001";   --解決溢位              
-                        elsif temp < "1000"    then     temp    <= unsigned(temp)+1;
+            when "010" =>if temp >= "10000"     then     temp    <= "00001";   --解決溢位              
+                        elsif temp < "10000"    then     temp    <= unsigned(temp)+1;
                         end if;                    
-            when "011" =>if temp >= "0111"     then     temp    <= "0110";
+            when "011" =>if temp >= "01111"     then     temp    <= "01110";
                         else temp <= unsigned(temp)-1;
                         end if;                    
-            when "100"  =>temp <= "1000";
-                       if temp = "1000" then
-                            if prestate = '1'      then temp 		<= "0000";
-                            elsif prestate = '0'    then temp 	    <= "0111";
-                            end if;	                   	
-                       end if;
-           when "101" => temp <= "1000";
-                         if temp = "1000"then
-                            temp <= "1001";
+            when "100"  =>
+                        if prestate = '1'      then temp 		<= "00000";
+                        elsif prestate = '0'    then temp 	    <= "01111";	                   	
+                        end if;
+           when "101" => temp <= "10000";
+                         if temp = "10000"then
+                            temp <= "11111";
                          end if;
             when others => NULL;
         end case;
     end if;	
 end if;
 end process;
-led <= temp;
+led <= temp(3 downto 0);
 end Behavioral;

@@ -26,8 +26,8 @@ entity Random_div is
     port(
             rst                      :  in std_logic;
             UB                    :  in integer;
-            random_value : in std_logic_vector(3 downto 0);
-            random_en                   :  in std_logic;
+            random_value   :  in std_logic_vector(3 downto 0);
+            random_en        :  in std_logic;
             clk_in                :  in std_logic;
             clk_out              : out std_logic
     );
