@@ -11,14 +11,16 @@ architecture led of led8 is
 begin
 process(q)
 begin
-    case q(2 downto 0) is when "000" => led <= "00000001";
-                          when "001" => led <= "00000010";
-                          when "010" => led <= "00000100";
-                          when "011" => led <= "00001000";
-                          when "100" => led <= "00010000";
-                          when "101" => led <= "00100000";
-                          when "110" => led <= "01000000";
-                          when "111" => led <= "10000000";                          
+    case q(3 downto 0) is when "0000" => led <= "00000001";
+                          when "0001" => led <= "00000010";
+                          when "0010" => led <= "00000100";
+                          when "0011" => led <= "00001000";
+                          when "0100" => led <= "00010000";
+                          when "0101" => led <= "00100000";
+                          when "0110" => led <= "01000000";
+                          when "0111" => led <= "10000000";    
+                          when "1000" => led <= "00000000";
+                          when "1111" => led <= "10000001";                           
                           when others => led <= "00000000";
     end case;
 end process;

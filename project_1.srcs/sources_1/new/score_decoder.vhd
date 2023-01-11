@@ -160,7 +160,7 @@ begin
     if rst = '1' then
         rst_system <= '0';
         UB <= 0;
-    else
+    elsif rising_edge(clk)then
         case OUTPUT_MODE is
             when SCORE => UB <= score_num;       
             when WIN => UB <= win_num;                

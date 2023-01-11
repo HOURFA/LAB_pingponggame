@@ -28,7 +28,6 @@ entity allgame is port(
     rst                  :  in std_logic;
     clk                  :  in std_logic;
     rx                   :  in std_logic;
-    buttom_player_left   :  in std_logic;
     buttom_player_right  :  in std_logic;
     tx                       : out std_logic;
     led_bus              : out std_logic_vector(LED_NUM - 1 downto 0);
@@ -37,10 +36,11 @@ entity allgame is port(
    Bout            : out std_logic_vector(3 downto 0); -- 
    hsync           : out std_logic;
    vsync           : out std_logic;
-   --
-    scl : inout std_logic;
-    sda : inout std_logic
-   --
+   dinout          : inout std_logic
+--   --
+--    scl : inout std_logic;
+--    sda : inout std_logic
+--   --
    );           
 end allgame;
 architecture game of allgame is
@@ -67,16 +67,16 @@ component Transmission_module is Port (
     i_clk   :  in std_logic;
     i_rst   :  in std_logic;
     i_rx   :  in std_logic;
---  
-    i_i2c_sda : inout std_logic;
-    i_i2c_scl : inout std_logic;
-    i_i2c_rw : in std_logic;
-    i_act : in std_logic_vector(2 downto 0);
-    i_prestate : in std_logic;
-    i_led_loc : in std_logic_vector(3 downto 0);
-    i_i2c_en : in std_logic;
-    o_i2c_data_s2m : out std_logic_vector(7 downto 0);
---
+----
+--    i_i2c_sda : inout std_logic;
+--    i_i2c_scl : inout std_logic;
+--    i_i2c_rw : in std_logic;
+--    i_act : in std_logic_vector(2 downto 0);
+--    i_led_loc : in std_logic_vector(3 downto 0);
+--    i_i2c_en : in std_logic;
+--    i_prestate : in std_logic;
+--    o_i2c_data_s2m : out std_logic_vector(7 downto 0);
+----    
     i_display_en    : in std_logic;
     i_score_left_sig            :  in std_logic_vector(3 downto 0);
     i_score_right_sig            :  in std_logic_vector(3 downto 0);
@@ -123,7 +123,19 @@ component Controller_module is port(
     o_led_act              : out std_logic_vector(2 downto 0);
     o_score_left           : out std_logic_vector(3 downto 0);
     o_score_right          : out std_logic_vector(3 downto 0);
+    d_trans              : out std_logic;
+    d_receive           : in std_logic;     
     o_i2c_rw                : out std_logic);
+end component;
+ 
+component Transmission is
+    Port (
+            clk       :  in std_logic;
+            rst       :  in std_logic;
+            data_trans :   in std_logic;
+            data_receive      : out std_logic;
+            Dinout : inout std_logic
+    );
 end component;
  
 signal divclk                :std_logic;
@@ -136,11 +148,9 @@ signal sig_led_loc ,sig_score_left,sig_score_right: std_logic_vector(3 downto 0)
 signal sig_led_act : std_logic_vector(2 downto 0);
 signal sig_UB : integer;
 
-signal i2c_en : std_logic;
+signal i2c_en ,d_trans,d_receive: std_logic;
 
 begin
-
---click_left <= de_buttom_left_sig or uart_player_left;
 
 click_left <= de_buttom_left_sig or uart_player_left or o_i2c_data_s2m(7);
 
@@ -148,11 +158,6 @@ click_right <= de_buttom_right_sig or uart_player_right;
 rst_all <= rst or rst_system;
 
 
-left    : buttom    port map(
-    rst                => rst_all,
-    clk                => clk,
-    click              => buttom_player_left,
-    buttom             => de_buttom_left_sig);
 right   : buttom    port map(
     rst                => rst_all,
     clk                => clk,
@@ -179,6 +184,8 @@ CONTROLLER :  Controller_module port map(
     o_led_act         => sig_led_act,    
     o_score_left      => sig_score_left, 
     o_score_right     => sig_score_right,
+    d_trans           => d_trans,
+    d_receive         => d_receive,
     o_i2c_rw          => i_i2c_rw
     );
 
@@ -200,27 +207,35 @@ process(rst)
 begin
     if rst = '1'then
         i2c_en <= '0';
-    elsif sig_led_loc < "00111"then
-        i2c_en <='0';
-    else
+    elsif sig_led_loc > "00111"then
         i2c_en <='1';
+    else
+        i2c_en <='0';
     end if;
 end process;
 
-TRANSMISSION :  Transmission_module Port map( 
+DINOUT_module : Transmission
+    Port map(
+            clk           => clk,
+            rst           => rst,
+            data_trans    => d_trans ,
+            data_receive  => d_receive,
+            Dinout        => Dinout
+    );
+TRANSMISSION_uart:  Transmission_module Port map( 
     i_clk               => clk,
     i_rst               => rst_all,
     i_rx                => rx,
---
-    i_i2c_sda           => sda,
-    i_i2c_scl           => scl,
-    i_i2c_rw            => i_i2c_rw,
-    i_act               => sig_led_act,
-    i_prestate          => sig_prestate,
-    i_led_loc           => sig_led_loc,
-    i_i2c_en            => i2c_en,
-    o_i2c_data_s2m      => o_i2c_data_s2m,
---
+----
+--    i_i2c_sda           => sda,
+--    i_i2c_scl           => scl,
+--    i_i2c_rw            => i_i2c_rw,
+--    i_act               => sig_led_act,
+--    i_prestate          => sig_prestate,
+--    i_led_loc           => sig_led_loc,
+--    i_i2c_en            => i2c_en,
+--    o_i2c_data_s2m      => o_i2c_data_s2m,
+------
     i_display_en        => sig_display_enable,
     i_score_left_sig    => sig_score_left,
     i_score_right_sig   => sig_score_right,

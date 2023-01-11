@@ -35,89 +35,81 @@ entity FSM is
             led_act                : out std_logic_vector(2 downto 0);
             score_left            : out std_logic_vector(3 downto 0);
             score_right         : out std_logic_vector(3 downto 0);
+            d_trans              : out std_logic;
+            d_receive           : in std_logic; 
             i2c_rw               : out std_logic
     ); 
 end FSM;
 architecture main of FSM is
-type FSM2 is(sa,sb,ha,hb,j);--定義FSM2=>sa,sb為發球，ha,hb為擊球判斷，j為得分判斷
+type FSM2 is(serve,hit,wait_ball,trans,receive);--定義FSM2=>sa,sb為發球，ha,hb為擊球判斷，j為得分判斷
 signal s,point_a,point_b,temp:std_logic_vector(3 downto 0);
 signal ps :std_logic;
-signal hit:FSM2;
+signal SYS_FSM:FSM2;
+signal cnt : integer range 0 to 16;
 begin
-process(rst,clk,click_left,click_right,hit,led_loc)
+process(rst,clk,click_right,SYS_FSM,led_loc)
 begin
 if rst = '1' then
-	hit 	<= sb;
-	ps 		<= '0';
+	SYS_FSM 	<= serve;
 	led_act <= "101";
 	point_a <= (others => '0');--右邊
 	point_b <= (others => '0');--左邊	
 	i2c_rw <= '0';
+	cnt <= 0;
+	ps <= '1';
 else
     if rising_edge(clk) then
         if en = '1' then
-            case hit is
-                when sa  => i2c_rw <= '0';
-                            led_act	<= "100";
-                            ps	<= '0';
-                            if click_left = '1' then--a發球  
-                                ps	<= '1';
-                                led_act	<= "001";
-                                hit <= hb;                                                                	                           
-                            elsif click_left = '0' then hit <= sa;
-                            end if;
-                when sb  =>led_act	<= "100";
-                            ps	<= '1';    
+            case SYS_FSM is
+                when serve =>led_act	<= "100";
                             if click_right = '1' then --b發球 
-                                ps	<= '0'; 
-                                led_act	<= "000";                                                       	                                                             	                               
-                                hit <= ha;                                                               
-                            elsif click_right = '0' then hit <= sb;
+                                ps	<= '1';                                                      	                                                             	                               
+                                SYS_FSM <= trans;                                                               
+                            else 
+                                SYS_FSM <= serve;
                             end if;
-                when ha  => i2c_rw <= '0';
-                            case click_left is 
-                                when '1' => if led_loc = "1111" then--正確回擊
-                                                led_act  <= "011";
-                                                hit <= hb;
-                                            else --錯誤回擊
-                                                led_act 		<= "100";
-                                                point_b <= point_b +1 ;
-                                                hit 	<= j; 
-                                            end if;
-                                when '0' => case led_loc is    	                                               
-                                                when "1111" =>     --沒有打到球
-                                                    point_b <= point_b +1 ;
-                                                    led_act 		<= "100";                                                 
-                                                    hit  	<= j;
-                                                when others =>hit <= ha;
-                                            end case;
-                                when others =>hit <= ha;
-                            end case;
-                when hb  =>  i2c_rw <= '1';
+                when hit  =>led_act <= "001";
                             case click_right is
                                 when '1' => if led_loc = "0000" then--正確回擊
-                                                led_act  <= "010";
-                                                hit <= ha;
+--                                                led_act  <= "010";
+                                                SYS_FSM <= trans;
                                             else --錯誤回擊
-                                                led_act 		<= "100";
+--                                                led_act 		<= "100";
                                                 point_a <= point_a +1;
-                                                hit 	<= j; 
+                                                SYS_FSM 	<= serve; 
                                             end if;
                                 when '0' => case led_loc is 
                                                 when "0000" =>
                                                     point_a <= point_a +1;
-                                                    led_act 		<= "100";                                                
-                                                    hit  	<= j;
-                                                when others =>hit <= hb;
+--                                                    led_act 		<= "100";                                                
+                                                    SYS_FSM  	<= serve;
+                                                when others =>SYS_FSM <= hit;
                                             end case;                                                    
-                                when others =>hit	<= hb;                                 
-                            end case;                                                         
-                when j   => 
-                            case ps is
-                                when '0' 	=> hit	<= sa;    	                                       
-                                when '1' 	=> hit	<= sb;
-                                when others => NULL;
-                            end case;
+                                when others => NULL;                                 
+                            end case;     
+                when wait_ball =>
+                    led_act <= "111";
+                    if d_receive = '1' then                        
+                        SYS_FSM <= hit;
+                    end if;                    
+                when trans =>
+                    i2c_rw <= '1';
+                    ps <= '1';
+                    led_act	<= "000";                                  
+                    if led_loc = "0111" then                                          
+                       SYS_FSM <= receive;
+                   else
+                       SYS_FSM <= trans;
+                   end if;  
+                when receive   =>
+                    i2c_rw <= '0';                
+                    led_act <= "110"; 
+                    if d_receive = '1' then                        
+                        SYS_FSM <= wait_ball;
+                    else
+                        SYS_FSM <= receive;
+                    end if;
+                when others => NULL;
             end case;
         end if;
     end if;
@@ -127,13 +119,30 @@ score_left 	<= point_a;
 score_right <= point_b;    
 end process;
 
+process(clk ,rst , SYS_FSM)
+begin
+    if rst = '1' then
+        d_trans <= '0';
+    else
+        case SYS_FSM is
+            when trans =>
+                if led_loc = "0111" then
+                    d_trans <= '1';
+                else
+                    d_trans <= '0';
+                end if;            
+            when others => d_trans <= '0';
+        end case;
+    end if;
+end process;
+
 display_process : process(rst,clk)
 begin
     if rst = '1' then
      display_en <= '0';
     else
         if rising_edge(clk)then
-            if hit = j then
+            if hit = receive then
                 display_en <= '1';
             else
                 display_en <= '0';

@@ -36,14 +36,14 @@ entity Transmission_module is Port (
     i_rst   :  in std_logic;
     i_rx   :  in std_logic;
 --
-i_i2c_sda : inout std_logic;
-i_i2c_scl : inout std_logic;
-i_i2c_rw : in std_logic;
-i_act : in std_logic_vector(2 downto 0);
-i_led_loc : in std_logic_vector(3 downto 0);
-i_i2c_en : in std_logic;
-i_prestate : in std_logic;
-o_i2c_data_s2m : out std_logic_vector(7 downto 0);
+    i_i2c_sda : inout std_logic;
+    i_i2c_scl : inout std_logic;
+    i_i2c_rw : in std_logic;
+    i_act : in std_logic_vector(2 downto 0);
+    i_led_loc : in std_logic_vector(3 downto 0);
+    i_i2c_en : in std_logic;
+    i_prestate : in std_logic;
+    o_i2c_data_s2m : out std_logic_vector(7 downto 0);
 --
     i_display_en   : in std_logic;
     i_score_left_sig            :  in std_logic_vector(3 downto 0);
@@ -60,7 +60,6 @@ end Transmission_module;
 
 architecture Behavioral of Transmission_module is
 
-
 component I2C_master is Port ( 
     clk     : in std_logic;
     rst     : in std_logic;
@@ -72,7 +71,6 @@ component I2C_master is Port (
     sda     : inout std_logic;
     scl     : inout std_logic);
 end component;
-
 
 component UART_RX is Port ( 
     clk         :in std_logic;
@@ -124,34 +122,21 @@ signal random_value : std_logic_vector(3 downto 0);
 
 
 signal i2c_data_m2s ,s2m,m2s: std_logic_vector(7 downto 0);
-signal scl , sda : std_logic;
 begin
-
 i2c_data_m2s <= i_prestate & i_led_loc & i_act;
 s_en <=    i_display_en or enter;    
-i_i2c_sda <= sda;
-i_i2c_scl <= scl;
---
 master : I2C_master port map(
     clk => i_clk,
-    sda => sda,
-    scl => scl,
+    sda => i_i2c_sda,
+    scl => i_i2c_scl,
     rst => i_rst,
     rw => i_i2c_rw,
     en => i_i2c_en,
-    addr_in => "11110000",
+    addr_in => "10101010",
     data_in => i2c_data_m2s,
     data_out => o_i2c_data_s2m
 );
---
---slave : I2C_slave 
---    port map(
---        sda => sda,
---        rst => i_rst,
---        scl => scl,
---        data_in => s2m,
---        data_out => m2s
---    );    
+----   
 rx_uart : UART_RX port map(
     clk                => i_clk,
     rst                => i_rst,

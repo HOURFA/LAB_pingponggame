@@ -49,7 +49,7 @@ end VGA_display;
 
 architecture Behavioral of VGA_display is
 
---signal shift : integer ;
+signal done : std_logic;
 
 begin
 ball_process : process (rst,clk,act)
@@ -84,37 +84,46 @@ shift_process : process (rst,clk)
 begin
     if rst = '1' then
         shift <= ball_radius;
+        done <= '0';
     else
         if rising_edge(div_clk)then
             case act is
                 when "000" => -- left_shift
-                if shift > 0 then        
-                    shift <= shift - (50 );
-                end if;                                
+                    done <= '0';
+                    if shift > 44 then        
+                        shift <= shift - 44;
+                    end if;                                
                 when "001" => -- right_shift
-
-                if shift <= horizontal_resolution - 50 then                            
-                    shift <= shift + (50 );
-                end if;                
+                    if shift < horizontal_resolution - 50 then                            
+                        shift <= shift + 44;
+                    end if;                
                 when "010" => --¥k¦^À»
-                    if shift > horizontal_resolution - 50 then
-                        shift <= horizontal_resolution -150;
+                    if shift > horizontal_resolution - 44 then
+                        shift <= horizontal_resolution -144;
                     else
-                        shift <= shift - (50 );
+                        shift <= shift - 44;
                     end if;
                 when "011" =>
                     if shift < 100 then
-                        shift <= 150;
+                        shift <= 144;
                     else
-                        shift <= shift + (50 );
+                        shift <= shift + 44;
                     end if;
                 when "100" => 
                     if prestate = '1' then
-                        shift <= horizontal_resolution - 50;
+                        shift <= horizontal_resolution - 44;
                     elsif prestate = '0' then
                         shift <= 50;                    
                     end if;                
                 when "101" => shift <= center_h;
+                when "110" => 
+                    if shift > 60 then
+                        shift <= shift - 44;
+                    else
+                        shift <= 50;
+                    end if;
+                when "111"=>
+                    shift <= shift +44;
                 when others => NULL; 
             end case;
         end if;

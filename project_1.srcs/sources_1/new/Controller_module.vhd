@@ -43,6 +43,8 @@ entity Controller_module is port(
     o_led_act              : out std_logic_vector(2 downto 0);
     o_score_left           : out std_logic_vector(3 downto 0);
     o_score_right          : out std_logic_vector(3 downto 0);
+    d_trans              : out std_logic;
+    d_receive           : in std_logic; 
     o_i2c_rw                : out std_logic);
 end Controller_module;
 
@@ -60,6 +62,8 @@ component FSM is port(
     led_act              : out std_logic_vector(2 downto 0);
     score_left           : out std_logic_vector(3 downto 0);
     score_right          : out std_logic_vector(3 downto 0);
+    d_trans              : out std_logic;
+    d_receive           : in std_logic; 
     i2c_rw               : out std_logic
     );
     
@@ -78,5 +82,7 @@ SYSTEM  : FSM       port map(
     display_en         => o_display_en,
     led_act            => o_led_act,
     prestate           => o_prestate,
+    d_trans           => d_trans,
+    d_receive         => d_receive,
     i2c_rw             => o_i2c_rw);
 end Behavioral;
